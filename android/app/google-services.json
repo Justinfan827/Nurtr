@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "812213791184",
+    "firebase_url": "https://nurtr-99e2d.firebaseio.com",
+    "project_id": "nurtr-99e2d",
+    "storage_bucket": "nurtr-99e2d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:812213791184:android:c30926449443c19c",
+        "android_client_info": {
+          "package_name": "co.nurtr.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "812213791184-vb0ism9lkpacukphua3qrr93ba3562c0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_nox0FlKjETZ-5tn9fmNMQXAkh6ZGNJM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "812213791184-vb0ism9lkpacukphua3qrr93ba3562c0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "812213791184-c6j7mn4hq3ciauu4jp3c9voam0s424si.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.nurtr"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
