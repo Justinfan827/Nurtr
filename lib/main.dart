@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flash_chat/screens/welcome_screen.dart';
-import 'package:flash_chat/screens/login_screen.dart';
-import 'package:flash_chat/screens/registration_screen.dart';
-import 'package:flash_chat/screens/chat_screen.dart';
-import 'screens/user_home_screen.dart';
+import 'package:flash_chat/screens/intro/welcome_screen.dart';
+import 'package:flash_chat/screens/intro/login_screen.dart';
+import 'package:flash_chat/screens/intro/registration_screen.dart';
+import 'package:flash_chat/screens/tabs/messages/chat_screen.dart';
+import 'package:flash_chat/screens/tabs/tab_root.dart';
 void main() => runApp(FlashChat());
 
 class FlashChat extends StatelessWidget {
@@ -18,7 +18,7 @@ class FlashChat extends StatelessWidget {
         LoginScreen.id : (context) => LoginScreen(),
         ChatScreen.id : (context) => ChatScreen(),
         RegistrationScreen.id: (context) => RegistrationScreen(),
-        UserHomeScreen.id: (context) => UserHomeScreen(),
+        TabRootScreen.id: (context) => TabRootScreen(),
       },
     );
   }

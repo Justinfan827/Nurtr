@@ -26,15 +26,18 @@ const kFloatingTextFieldDecoration = InputDecoration(
 );
 
 const kMessageTextFieldDecoration = InputDecoration(
+  filled: true,
   hintText: 'Enter message',
+  contentPadding: EdgeInsets.all(15.0),
   border: OutlineInputBorder(
-    borderSide: BorderSide.none
+
+    borderSide: BorderSide.none,
+    borderRadius: BorderRadius.all(Radius.circular(40.0))
   )
 );
 
 const kMessageContainerDecoration = BoxDecoration(
   border: Border(
-    top: BorderSide(color: Colors.lightBlueAccent, width: 2.0),
   ),
 );
 

@@ -18,6 +18,8 @@ dependencies:
   font_awesome_flutter: ^8.4.0
   flutter_spinkit: ^3.1.0
   provider: ^3.0.0+1
+  modal_progress_hud: ^0.1.3
+  unicorndial: ^1.1.5
 
 
 
@@ -27,6 +29,17 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
+  fonts:
+    - family: Lato
+      fonts:
+        - asset: fonts/Lato-Regular.ttf
+        - asset: fonts/Lato-Thin.ttf
+        - asset: fonts/Lato-Bold.ttf
+          weight: 700
+        - asset: fonts/Lato-ThinItalic.ttf
+          style: italic
+
+
   uses-material-design: true
 
   assets:
