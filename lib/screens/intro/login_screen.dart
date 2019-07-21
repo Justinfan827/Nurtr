@@ -3,10 +3,12 @@ import 'package:flash_chat/components/RoundedButton.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/screens/tabs/messages/chat_screen.dart';
+import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/screens/tabs/tab_root.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flash_chat/services/database_service.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:flash_chat/services/auth_service.dart';
 import 'package:flash_chat/screens/tabs/tab_root.dart';
 class LoginScreen extends StatefulWidget {
   static String id = '/login_screen';
@@ -21,11 +23,13 @@ class _LoginScreenState extends State<LoginScreen>
   String pword;
   bool loading;
   DatabaseService databaseService;
+  AuthService authService;
   // Define a controller to animate the entry of buttons.
   @override
   void initState() {
     super.initState();
     databaseService = DatabaseService();
+    authService = AuthService();
     loading = false;
 
     this.email = 'justin@gmail.com';
@@ -37,13 +41,15 @@ class _LoginScreenState extends State<LoginScreen>
       this.loading = true;
     });
     try {
-      FirebaseUser user = await databaseService.signInUser(this.email, this.pword);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => TabRootScreen(user: user)));
+      await authService.signInUser(this.email, this.pword);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => TabRootScreen(authService: authService, dbService: databaseService)));
     } catch (e) {
       print("LOGIN FAILED");
+      setState(() {
+        this.loading = false;
+      });
       print(e);
     }
-    this.loading = false;
 
   }
 

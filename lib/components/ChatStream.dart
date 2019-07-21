@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flash_chat/models/datamodels.dart';
 
 class ChatStream extends StatefulWidget {
   // this the connecion collection in fb
   final Stream<QuerySnapshot> msgStream;
-  final FirebaseUser user;
+  final User user;
+  final ScrollController scrollController;
 
-  ChatStream({@required this.msgStream, @required this.user});
+  ChatStream(
+      {@required this.msgStream,
+      @required this.user,
+      @required this.scrollController});
 
   @override
   _ChatStreamState createState() => _ChatStreamState();
@@ -21,6 +26,7 @@ class _ChatStreamState extends State<ChatStream> {
   void initState() {
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -28,7 +34,6 @@ class _ChatStreamState extends State<ChatStream> {
       builder: (context, snapshot) {
         print('building stream');
         if (!snapshot.hasData) {
-
           return Expanded(
             child: Container(
               child: Center(
@@ -41,14 +46,11 @@ class _ChatStreamState extends State<ChatStream> {
         }
         List<Widget> msg = [];
         print(snapshot.toString());
-        snapshot.data.documents.forEach((doc) {
+        snapshot.data.documents.reversed.forEach((doc) {
           String sender = doc.data['senderName'];
           String senderEmail = doc.data['senderEmail'];
 
           String text = doc.data['content'];
-          print("sender: " + sender);
-          print("content: " + text);
-
 
           bool isMe = (widget.user.email == senderEmail);
           msg.add(
@@ -79,7 +81,11 @@ class _ChatStreamState extends State<ChatStream> {
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ListView(children: msg),
+            child: ListView(
+              reverse: true,
+              children: msg,
+              controller: widget.scrollController,
+            ),
           ),
         );
       },

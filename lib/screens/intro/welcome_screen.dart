@@ -4,6 +4,7 @@ import 'package:flash_chat/screens/intro/login_screen.dart';
 import 'package:flash_chat/screens/intro/registration_screen.dart';
 import 'package:flash_chat/components/RoundedButton.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+
 class WelcomeScreen extends StatefulWidget {
   static String id = '/';
 
@@ -11,21 +12,10 @@ class WelcomeScreen extends StatefulWidget {
   _WelcomeScreenState createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen>
-    with SingleTickerProviderStateMixin {
-  AnimationController controller;
-  Animation<int> alpha;
+class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    this.controller =
-        AnimationController(duration: Duration(seconds: 1), vsync: this);
-    alpha = IntTween(begin: 0, end: 90).animate(controller);
-    alpha.addListener(() {
-      setState(() {});
-    });
-    controller.forward();
-
   }
 
   @override
@@ -71,14 +61,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               text: 'Log in',
               color: Colors.lightBlueAccent,
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (context) => LoginScreen(),
+                  ),
+                );
               },
             ),
             RoundedButton(
               text: 'Register',
               color: Colors.blueAccent,
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (context) => RegistrationScreen(),
+                  ),
+                );
               },
             ),
           ],

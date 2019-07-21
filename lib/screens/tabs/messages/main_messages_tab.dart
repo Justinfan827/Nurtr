@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,13 +7,15 @@ import 'package:provider/provider.dart';
 import 'package:flash_chat/screens/intro/welcome_screen.dart';
 import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/components/FriendListTile.dart';
+import 'package:flash_chat/services/auth_service.dart';
+import 'package:flash_chat/components/TabTitleText.dart';
 
 /**
  * This is the screen that first loads when the user enters the app
  */
 class MessageTab extends StatefulWidget {
   static String id = '/user_home_screen';
-  final FirebaseUser user;
+  final User user;
 
   MessageTab({@required this.user});
 
@@ -25,25 +26,22 @@ class MessageTab extends StatefulWidget {
 class _MessageTabState extends State<MessageTab> {
   // Collection of friends from firestore.
   CollectionReference fbFriendsCollection;
-  DatabaseService service;
-  Future<User> currentUserName;
+  DatabaseService dbService;
+  AuthService authService;
+  User user;
   String friendName;
-  int _currentIndex;
   List<SingleChildCloneableWidget> providers;
 
   @override
   void initState() {
     super.initState();
-    this.service = DatabaseService();
-    this._currentIndex = 0;
+    this.dbService = DatabaseService();
     setupUser();
   }
 
   void addFriend() async {
     try {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => WelcomeScreen()));
-      await service.addFriend(friendName);
+      await dbService.addFriend(user, friendName);
     } catch (e) {
       print(e);
     }
@@ -55,24 +53,17 @@ class _MessageTabState extends State<MessageTab> {
         .collection('users')
         .document(widget.user.uid)
         .collection('friends');
-
-    // Get current user's username.
-    currentUserName = service.getUser(widget.user.uid);
-
     // Set up providers to inject into component.
     providers = [
       Provider<CollectionReference>.value(value: fbFriendsCollection),
     ];
   }
 
-  void onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    user = Provider.of<User>(context);
+    authService = Provider.of<AuthService>(context);
+    dbService = Provider.of<DatabaseService>(context);
     return MultiProvider(
       providers: this.providers,
       child: Scaffold(
@@ -84,14 +75,7 @@ class _MessageTabState extends State<MessageTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      "Messages",
-                      style: TextStyle(
-                        fontSize: 50,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Lato',
-                      ),
-                    ),
+                    child: TabTitleText(title: "Messages")
                   ),
                 ],
               ),
@@ -156,7 +140,7 @@ class _MessageTabState extends State<MessageTab> {
                         friends.add(FriendListTile(
                           friendName: name,
                           tileInfo:
-                          service.getFriendInfo(fbFriendsCollection, docID),
+                          dbService.getFriendInfo(fbFriendsCollection, docID),
                         ));
                       });
 

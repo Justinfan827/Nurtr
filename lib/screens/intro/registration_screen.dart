@@ -6,6 +6,8 @@ import 'package:flash_chat/components/RoundedButton.dart';
 import 'package:flash_chat/services/database_service.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:flash_chat/screens/tabs/tab_root.dart';
+import 'package:flash_chat/services/auth_service.dart';
+import 'package:flash_chat/models/datamodels.dart';
 class RegistrationScreen extends StatefulWidget {
   static String id = '/reg_screen';
 
@@ -19,6 +21,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String firstName;
   String lastName;
   DatabaseService databaseService;
+  AuthService authService;
   bool _saving;
   // Define a controller to animate the entry of buttons.
   @override
@@ -37,23 +40,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (this.pword == null || this.email == null || this.firstName == null || this.lastName == null) {
       return;
     }
-    FirebaseUser user;
+    User user;
     try {
       print("sending info");
       setInAsyncCall(true);
-      user = await databaseService.createUser(email, pword, firstName, lastName).catchError((onError) {
+      await databaseService.createUser(email, pword, firstName, lastName).catchError((onError) {
         print(onError);
         setInAsyncCall(false);
         return;
       });
-
+      await authService.signInUser(email, pword);
     } catch (e) {
       print("in catch statement");
+      setInAsyncCall(false);
       return;
     }
     setInAsyncCall(false);
     Navigator.push(context,
-        MaterialPageRoute(builder: (context) => TabRootScreen(user: user)));
+        MaterialPageRoute(builder: (context) => TabRootScreen(authService: authService, dbService: databaseService,)));
 
   }
 
