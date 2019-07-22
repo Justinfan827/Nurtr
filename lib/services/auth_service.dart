@@ -26,9 +26,10 @@ class AuthService {
   }
 
   /// Get currently authenticated user.
-  Future<User> getCurrentAuthenticatedUser() async {
+  Future<Me> getCurrentAuthenticatedUser() async {
     FirebaseUser user = await auth.currentUser();
-    return dbService.getUser(user.uid);
+    User u = await dbService.getUser(user.uid);
+    return Me.fromUser(u);
   }
 
   /// Stream to listen to changes in user.

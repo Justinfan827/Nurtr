@@ -9,10 +9,10 @@ import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/services/database_service.dart';
 
 class FriendListTile extends StatefulWidget {
-  DocumentReference tileInfo;
-  String friendName;
-
-  FriendListTile({@required this.friendName, @required this.tileInfo});
+  final DocumentReference tileInfo;
+  final String friendName;
+  final Me me;
+  FriendListTile({@required this.friendName, @required this.tileInfo,  @required this.me});
 
   @override
   _FriendListTileState createState() => _FriendListTileState();
@@ -25,22 +25,24 @@ class _FriendListTileState extends State<FriendListTile> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
   }
 
-  void chatHandler() {
+  void chatHandler(context) async {
     // Generate conversation stream (subcollection of friends)
+    if (friendInfo == null) {
+      await getUser(context);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
         //TODO: see if this is the right way to do things since navigating makes provider not work.
         builder: (_) => MultiProvider(
           providers: [
-            // Provide info on the logged in user.
-            Provider<User>.value(value: Provider.of<User>(context)),
+            // Provide info on the logged in friend.
+            Provider<User>.value(value: friendInfo),
+            Provider<Me>.value(value: widget.me),
             Provider<DocumentReference>.value(value: widget.tileInfo),
-            Provider<DatabaseService>.value(value: Provider.of<DatabaseService>(context)),
-            Provider<User>.value(value: friendInfo,),
+            Provider<DatabaseService>.value(value: DatabaseService()),
           ],
           child: ChatScreen(
             friendName: widget.friendName,
@@ -53,16 +55,15 @@ class _FriendListTileState extends State<FriendListTile> {
 
   @override
   Widget build(BuildContext context) {
-    widget.tileInfo.get().then((doc) {
-      friendInfo = User.fromFirestore(doc);
-      print("friend's info: ${friendInfo.toString()}");
-    });
     return ListTile(
-      onTap: chatHandler,
+      onTap: () => chatHandler(context),
       title: Text(widget.friendName),
       subtitle: StreamBuilder<DocumentSnapshot>(
         stream: widget.tileInfo.snapshots(),
         builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.active || !snapshot.hasData) {
+            return Container();
+          }
           var info = snapshot.data.data['lastText'];
           String sender = info['senderEmail'].toString();
           String content = info['content'].toString();
@@ -71,5 +72,9 @@ class _FriendListTileState extends State<FriendListTile> {
       ),
       leading: Icon(FontAwesomeIcons.child),
     );
+  }
+
+  Future<void> getUser(context) async {
+    friendInfo = await Provider.of<DatabaseService>(context).getUser(widget.tileInfo.documentID);
   }
 }

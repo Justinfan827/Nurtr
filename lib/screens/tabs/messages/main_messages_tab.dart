@@ -28,7 +28,7 @@ class _MessageTabState extends State<MessageTab> {
   CollectionReference fbFriendsCollection;
   DatabaseService dbService;
   AuthService authService;
-  User user;
+  Me user;
   String friendName;
   List<SingleChildCloneableWidget> providers;
 
@@ -61,7 +61,7 @@ class _MessageTabState extends State<MessageTab> {
 
   @override
   Widget build(BuildContext context) {
-    user = Provider.of<User>(context);
+    user = Provider.of<Me>(context);
     authService = Provider.of<AuthService>(context);
     dbService = Provider.of<DatabaseService>(context);
     return MultiProvider(
@@ -83,82 +83,86 @@ class _MessageTabState extends State<MessageTab> {
           ),
           preferredSize: Size.fromHeight(100),
         ),
-        body: Column(
-          children: <Widget>[
-            Container(
-              decoration: kMessageContainerDecoration,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child: Row(
-                      children: <Widget>[
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: <Widget>[
+              Container(
+                decoration: kMessageContainerDecoration,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                      child: Row(
+                        children: <Widget>[
 //                        Image(
 //                          image: AssetImage('images/searchIcon.png'),
 //                          height: 20,
 //                        ),
-                        Expanded(
-                          child: TextField(
-                            onChanged: (value) {
-                              friendName = value;
-                            },
-                            decoration: kMessageTextFieldDecoration.copyWith(
-                                hintText: "Add friend by first name"),
+                          Expanded(
+                            child: TextField(
+                              onChanged: (value) {
+                                friendName = value;
+                              },
+                              decoration: kMessageTextFieldDecoration.copyWith(
+                                  hintText: "Add friend by first name"),
+                            ),
                           ),
-                        ),
-                        FlatButton(
-                          onPressed: addFriend,
-                          child: Text(
-                            'Add',
-                            style: kSendButtonTextStyle,
+                          FlatButton(
+                            onPressed: addFriend,
+                            child: Text(
+                              'Add',
+                              style: kSendButtonTextStyle,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: Center(
-                child: Container(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: fbFriendsCollection.snapshots(),
-                    builder: (context, snapshot) {
-                      List<Widget> friends = [];
+              Expanded(
+                child: Center(
+                  child: Container(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: fbFriendsCollection.snapshots(),
+                      builder: (context, snapshot) {
+                        List<Widget> friends = [];
+                        print("connection state: ${snapshot.connectionState} valu: ${snapshot.data}");
+                        if (snapshot.connectionState != ConnectionState.active || !snapshot.hasData) {
+                          return Text("Loading");
+                        }
 
-                      if (!snapshot.hasData) {
-                        print("here no data");
-                        return Text("Loading");
-                      }
+                        // Create tile for each friend
+                        snapshot.data.documents.forEach((friend) {
+                          print(friend.data);
+                          String name =
+                              "${friend.data['firstName']} ${friend.data['lastName']}";
+                          String docID = friend.documentID;
+                          friends.add(FriendListTile(
+                            friendName: name,
+                            me: user,
+                            tileInfo:
+                            dbService.getFriendInfo(fbFriendsCollection, docID),
+                          ));
+                        });
 
-                      // Create tile for each friend
-                      snapshot.data.documents.forEach((friend) {
-                        String name =
-                            "${friend.data['firstName']} ${friend.data['lastName']}";
-                        String docID = friend.documentID;
-                        friends.add(FriendListTile(
-                          friendName: name,
-                          tileInfo:
-                          dbService.getFriendInfo(fbFriendsCollection, docID),
-                        ));
-                      });
-
-                      return ListView.separated(
-                        padding: const EdgeInsets.all(8.0),
-                        itemCount: friends.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return friends[index];
-                        },
-                        separatorBuilder: (BuildContext context, int index) =>
-                        const Divider(),
-                      );
-                    },
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(8.0),
+                          itemCount: friends.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return friends[index];
+                          },
+                          separatorBuilder: (BuildContext context, int index) =>
+                          const Divider(),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

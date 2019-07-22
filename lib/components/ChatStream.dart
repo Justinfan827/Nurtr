@@ -3,16 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/models/datamodels.dart';
+import 'package:provider/provider.dart';
 
 class ChatStream extends StatefulWidget {
   // this the connecion collection in fb
   final Stream<QuerySnapshot> msgStream;
-  final User user;
   final ScrollController scrollController;
 
   ChatStream(
       {@required this.msgStream,
-      @required this.user,
       @required this.scrollController});
 
   @override
@@ -29,6 +28,8 @@ class _ChatStreamState extends State<ChatStream> {
 
   @override
   Widget build(BuildContext context) {
+    Me me = Provider.of<Me>(context);
+    User friend = Provider.of<User>(context);
     return StreamBuilder<QuerySnapshot>(
       stream: widget.msgStream,
       builder: (context, snapshot) {
@@ -52,7 +53,7 @@ class _ChatStreamState extends State<ChatStream> {
 
           String text = doc.data['content'];
 
-          bool isMe = (widget.user.email == senderEmail);
+          bool isMe = (me.email == senderEmail);
           msg.add(
             //TODO: refactor to lightweight widget
             Column(

@@ -15,7 +15,6 @@ final _auth = FirebaseAuth.instance;
 
 class ChatScreen extends StatefulWidget {
   static String id = '/chat_screen';
-
   // example path to collection: /users/justin@gmail.com/friends/Mf2o4A9xsQht8hrd2vfs/connection
   CollectionReference chatData;
   String friendName;
@@ -28,9 +27,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   Stream<QuerySnapshot> _msgStream;
-  String msgInput;
   //user information;
-  User user;
+  User me;
   String myUID;
   String friendUID;
 
@@ -49,6 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // Create a text controller. Later, use it to retrieve the
   // current value of the TextField.
   final myController = TextEditingController();
+  get msgInput => myController.text;
 
   @override
   void dispose() {
@@ -69,15 +68,14 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void messageSendHandler() {
-    myController.clear();
-    if (this.msgInput.length > 0) {
+    if (msgInput.length > 0) {
       widget.chatData.document().setData({
-        'content': this.msgInput,
-        'senderEmail': user.email,
-        'senderName': user.email
+        'content': myController.text,
+        'senderEmail': me.email,
+        'senderName': me.email
       });
     }
-    this.msgInput = "";
+    myController.clear();
   }
 
   String displayHour(int hour, int _min) {
@@ -213,8 +211,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void setupUsers(context) async {
-    this.user = Provider.of<User>(context);
-    myUID = this.user.uid;
+    this.me = Provider.of<Me>(context);
     friendUID = Provider.of<User>(context).uid;
   }
 
@@ -226,7 +223,6 @@ class _ChatScreenState extends State<ChatScreen> {
         appBar: AppBar(
           leading: null,
           title: Text(widget.friendName),
-          backgroundColor: Colors.lightBlueAccent,
         ),
         body: SafeArea(
           child: Column(
@@ -236,14 +232,13 @@ class _ChatScreenState extends State<ChatScreen> {
               Container(
                 child: ChatStream(
                     msgStream: this._msgStream,
-                    user: user,
                     scrollController: _scrollController),
               ),
               _hiddenWidget,
               Container(
                 decoration: kMessageContainerDecoration,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
@@ -251,9 +246,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: TextField(
                           style: TextStyle(),
                           controller: myController,
-                          onChanged: (value) {
-                            this.msgInput = value;
-                          },
+                          onEditingComplete: messageSendHandler,
+                          onChanged: (value) => updateState(),
                           decoration: kMessageTextFieldDecoration,
                         ),
                       ),
@@ -279,5 +273,12 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+
+  void updateState() {
+    print("Value: $msgInput");
+    setState(() {
+
+    });
   }
 }

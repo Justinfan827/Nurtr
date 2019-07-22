@@ -6,6 +6,24 @@ Firestore user document.
 
 TODO: maybe add information on authenticated user as well?
  */
+
+class Me extends User {
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String uid;
+  Me({this.firstName, this.lastName, this.email, this.uid});
+
+  factory Me.fromUser(User user) {
+    return Me(
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      uid: user.uid
+    );
+  }
+}
+
 class User {
 
   final String firstName;

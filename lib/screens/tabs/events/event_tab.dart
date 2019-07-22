@@ -7,6 +7,8 @@ import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/components/EventCard.dart';
 import 'package:flash_chat/services/database_service.dart';
 
+import '../../../constants.dart';
+
 class EventTabScreen extends StatefulWidget {
   @override
   _EventTabScreenState createState() => _EventTabScreenState();
@@ -61,12 +63,33 @@ class _EventTabScreenState extends State<EventTabScreen> {
 
       // BODY
       body: Container(
-        child: ListView(
-//          children: generateEvents(eventsSnapshot),
+        child: Column(
+          children: <Widget>[
+            Container(
+              child: Center(
+                child: Text(
+                  "Today's events",
+                  style: TextStyle(
+                    fontFamily: 'Lato',
+                    color: mainGreen,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            _buildEventList(context),
+          ],
         ),
       ),
     );
 
 
+  }
+
+  Widget _buildEventList(BuildContext context) {
+    QuerySnapshot eventsSnapshot = Provider.of<QuerySnapshot>(context);
+    if ()
+    return null;
   }
 }

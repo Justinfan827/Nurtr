@@ -25,7 +25,7 @@ class TabRootScreen extends StatefulWidget {
 class _TabRootScreenState extends State<TabRootScreen> {
   List<Widget> tabs;
   List<SingleChildCloneableWidget> _providers;
-  User user;
+  Me user;
   bool isLoading;
   int _selectedIndex;
   @override
@@ -48,7 +48,7 @@ class _TabRootScreenState extends State<TabRootScreen> {
     ];
 
     _providers = [
-      Provider<User>.value(value: user),
+      Provider<Me>.value(value: user),
       Provider<DatabaseService>.value(value: widget.dbService),
       Provider<AuthService>.value(value: widget.authService),
     ];

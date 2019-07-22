@@ -4,13 +4,19 @@ import 'package:flash_chat/screens/intro/login_screen.dart';
 import 'package:flash_chat/screens/intro/registration_screen.dart';
 import 'package:flash_chat/screens/tabs/messages/chat_screen.dart';
 import 'package:flash_chat/screens/tabs/tab_root.dart';
+
+import 'constants.dart';
 void main() => runApp(FlashChat());
 
 class FlashChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData.light(),
+      theme: ThemeData.light().copyWith(
+        appBarTheme: AppBarTheme(
+          color: Colors.black
+        )
+      ),
       initialRoute: WelcomeScreen.id,
 
       routes: {
