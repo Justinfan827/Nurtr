@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/components/EventCard.dart';
-import 'package:flash_chat/services/database_service.dart';
+import 'package:flash_chat/services/FirebaseDatabase.dart';
 
 import '../../../constants.dart';
 
@@ -31,17 +31,6 @@ class _EventTabScreenState extends State<EventTabScreen> {
 
   @override
   Widget build(BuildContext context) {
-    QuerySnapshot eventsSnapshot = Provider.of<QuerySnapshot>(context);
-    if (eventsSnapshot == null) {
-      print("buildingEventPage: eventstream isn't yet built");
-      return Center(
-        child: SpinKitCircle(
-          color: Colors.blueAccent,
-          size: 10,
-        ),
-      );
-    }
-    print("buildingEventPage: eventstream${eventsSnapshot.toString()}");
     return Scaffold(
       // APP BAR
       appBar: PreferredSize(
@@ -78,7 +67,7 @@ class _EventTabScreenState extends State<EventTabScreen> {
                 ),
               ),
             ),
-            _buildEventList(context),
+            _buildEventList(),
           ],
         ),
       ),
@@ -87,9 +76,16 @@ class _EventTabScreenState extends State<EventTabScreen> {
 
   }
 
-  Widget _buildEventList(BuildContext context) {
-    QuerySnapshot eventsSnapshot = Provider.of<QuerySnapshot>(context);
-    if ()
-    return null;
+  Widget _buildEventList() {
+    List<Widget> events = Provider.of<List<Event>>(context).map(
+        (event) {
+          return EventCard(event: event,);
+        }
+    ).toList();
+    return Container(
+      child: Column(
+        children: events,
+      ),
+    );
   }
 }

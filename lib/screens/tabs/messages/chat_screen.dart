@@ -1,9 +1,11 @@
+import 'package:flash_chat/components/StreamItemBuilder.dart';
+import 'package:flash_chat/services/time_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:flash_chat/services/database_service.dart';
+import 'package:flash_chat/services/FirebaseDatabase.dart';
 import 'package:flash_chat/components/ChatStream.dart';
 import 'package:provider/provider.dart';
 import 'package:flash_chat/components/FriendListTile.dart';
@@ -15,11 +17,9 @@ final _auth = FirebaseAuth.instance;
 
 class ChatScreen extends StatefulWidget {
   static String id = '/chat_screen';
-  // example path to collection: /users/justin@gmail.com/friends/Mf2o4A9xsQht8hrd2vfs/connection
-  CollectionReference chatData;
-  String friendName;
-
-  ChatScreen({@required this.friendName, @required this.chatData});
+  final Stream<User> userStream;
+  final Stream<List<Message>> chatStream;
+  ChatScreen({@required this.userStream, @required this.chatStream});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -30,7 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
   //user information;
   User me;
   String myUID;
-  String friendUID;
+  User friend;
 
   ScrollController _scrollController;
 
@@ -61,7 +61,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    this._msgStream = widget.chatData.snapshots();
     _scrollController = ScrollController();
     _hiddenWidget = Container();
     displayDate = "";
@@ -69,33 +68,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void messageSendHandler() {
     if (msgInput.length > 0) {
-      widget.chatData.document().setData({
-        'content': myController.text,
-        'senderEmail': me.email,
-        'senderName': me.email
-      });
+//      widget.chatData.document().setData({
+//        'content': myController.text,
+//        'senderEmail': me.email,
+//        'senderName': me.email
+//      });
     }
     myController.clear();
   }
 
-  String displayHour(int hour, int _min) {
-    var minute = _min.toString();
-    if (int.parse(minute) < 10) {
-      minute = "0${minute.toString()}";
-    }
-    if (hour > 12 && hour != 0) {
-      return "${(hour - 12)}:${minute}pm";
-    } else if (hour == 0) {
-      return "12:${minute}am";
-    } else {
-      return "${(hour)}:${minute}pm";
-    }
-  }
+
   void setDate(DateTime date) {
     print("SetDaterCalled with: $date in chat_screen.dart");
     setState(() {
       this.displayDate =
-      "${dayMap[date.weekday]} ${monthMap[date.month]} ${date.day} ${date.year} at ${displayHour(date.hour, date.minute)}";
+      "${dayMap[date.weekday]} ${monthMap[date.month]} ${date.day} ${date.year} at ${TimeService.displayHour(date.hour, date.minute)}";
       print(displayDate);
       eventISOUTCDate = date.toUtc().toIso8601String();
     });
@@ -120,99 +107,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // Form has: Event name, time
-  void createEventHandler(context) async {
-    setState(
-      () {
-        _hiddenWidget = Container(
-          decoration: BoxDecoration(
-            color: Colors.white70,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-            child: Column(
-              children: <Widget>[
-                Center(
-                  child: Container(
-                    child: GestureDetector(
-                      onTap: closeEventCreator,
-                      child: Icon(
-                        FontAwesomeIcons.chevronDown,
-                      ),
-                    ),
-                  ),
-                ),
-                Text(
-                  "New Event with ${widget.friendName.split(" ")[0]}!",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Lato',
-                  ),
-                ),
-                Text(
-                  this.displayDate,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'Lato',
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.user),
-                  title: TextField(
-                    onChanged: (value) {this.eventName = value;},
-                    style: TextStyle(fontFamily: "Lato"),
-                    decoration: InputDecoration(
-                      hintText: "Event Name",
-                    ),
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.pen),
-                  title: TextField(
-                    onChanged: (value) {this.eventDescription = value;},
-                    style: TextStyle(fontFamily: "Lato"),
-                    decoration: InputDecoration(
-                      hintText: "Description",
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    RawMaterialButton(
-                      onPressed: () => setTimeSchedule(context),
-                      child: Icon(FontAwesomeIcons.calendar),
-                    ),
-                    RawMaterialButton(
-                      child: Icon(FontAwesomeIcons.locationArrow),
-                      onPressed: setEventLocation,
-                    ),
-                    RawMaterialButton(
-                      child: Text("Create event"),
-                      onPressed: () {
-                        Provider.of<DatabaseService>(context).createEvent(
-                            this.eventName,
-                            this.eventDescription,
-                            this.eventISOUTCDate,
-                            [myUID, friendUID]
-                        );
-                      },
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void setupUsers(context) async {
     this.me = Provider.of<Me>(context);
-    friendUID = Provider.of<User>(context).uid;
+    this.friend = Provider.of<User>(context);
   }
 
   @override
@@ -220,20 +117,17 @@ class _ChatScreenState extends State<ChatScreen> {
     setupUsers(context);
     return Consumer<User>(
       builder: (context, user, _) => Scaffold(
-        appBar: AppBar(
-          leading: null,
-          title: Text(widget.friendName),
-        ),
+        appBar: _buildAppBar(),
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Container(
-                child: ChatStream(
-                    msgStream: this._msgStream,
-                    scrollController: _scrollController),
-              ),
+//              Container(
+//                child: ChatStream(
+//                    msgStream: this._msgStream,
+//                    scrollController: _scrollController),
+//              ),
               _hiddenWidget,
               Container(
                 decoration: kMessageContainerDecoration,
@@ -253,7 +147,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       FlatButton(
                         onPressed: () {
-                          createEventHandler(context);
+//                          createEventHandler(context);
                         },
                         child: Icon(FontAwesomeIcons.calendar),
                       ),
@@ -275,10 +169,115 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Form has: Event name, time
+//  void createEventHandler(context) async {
+//    setState(
+//      () {
+//        _hiddenWidget = Container(
+//          decoration: BoxDecoration(
+//            color: Colors.white70,
+//            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//          ),
+//          child: Padding(
+//            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+//            child: Column(
+//              children: <Widget>[
+//                Center(
+//                  child: Container(
+//                    child: GestureDetector(
+//                      onTap: closeEventCreator,
+//                      child: Icon(
+//                        FontAwesomeIcons.chevronDown,
+//                      ),
+//                    ),
+//                  ),
+//                ),
+//                Text(
+//                  "New Event with ${widget.friendName.split(" ")[0]}!",
+//                  style: TextStyle(
+//                    fontSize: 20,
+//                    fontWeight: FontWeight.w700,
+//                    fontFamily: 'Lato',
+//                  ),
+//                ),
+//                Text(
+//                  this.displayDate,
+//                  style: TextStyle(
+//                    fontSize: 12,
+//                    fontFamily: 'Lato',
+//                  ),
+//                ),
+//                ListTile(
+//                  leading: Icon(FontAwesomeIcons.user),
+//                  title: TextField(
+//                    onChanged: (value) {this.eventName = value;},
+//                    style: TextStyle(fontFamily: "Lato"),
+//                    decoration: InputDecoration(
+//                      hintText: "Event Name",
+//                    ),
+//                  ),
+//                ),
+//                ListTile(
+//                  leading: Icon(FontAwesomeIcons.pen),
+//                  title: TextField(
+//                    onChanged: (value) {this.eventDescription = value;},
+//                    style: TextStyle(fontFamily: "Lato"),
+//                    decoration: InputDecoration(
+//                      hintText: "Description",
+//                    ),
+//                  ),
+//                ),
+//                Row(
+//                  mainAxisAlignment: MainAxisAlignment.center,
+//                  children: <Widget>[
+//                    RawMaterialButton(
+//                      onPressed: () => setTimeSchedule(context),
+//                      child: Icon(FontAwesomeIcons.calendar),
+//                    ),
+//                    RawMaterialButton(
+//                      child: Icon(FontAwesomeIcons.locationArrow),
+//                      onPressed: setEventLocation,
+//                    ),
+//                    RawMaterialButton(
+//                      child: Text("Create event"),
+//                      onPressed: () {
+////                        Provider.of<FirestoreDatabase>(context).createEvent(
+////                            this.eventName,
+////                            this.eventDescription,
+////                            this.eventISOUTCDate,
+////                            [me.uid, friend.uid],
+////                            [this.me, this.friend ]
+////                        );
+//                      },
+//                    ),
+//                  ],
+//                )
+//              ],
+//            ),
+//          ),
+//        );
+//      },
+//    );
+//  }
   void updateState() {
     print("Value: $msgInput");
     setState(() {
 
     });
+  }
+
+  Widget _buildAppBar() {
+    return AppBar(
+      leading: null,
+      title: StreamBuilder<User>(
+        stream: widget.userStream,
+        builder: (context, AsyncSnapshot<User> snapshot) {
+          return StreamItemBuilder<User>(
+            snapshot: snapshot,
+            itemBuilder: (User data) => Text(data.firstName),
+          );
+        },
+      ),
+    );
   }
 }

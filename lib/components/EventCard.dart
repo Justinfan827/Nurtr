@@ -1,8 +1,9 @@
+import 'package:flash_chat/services/time_service.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flash_chat/models/datamodels.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:flash_chat/services/database_service.dart';
+import 'package:flash_chat/services/FirebaseDatabase.dart';
 import 'package:provider/provider.dart';
 class EventCard extends StatefulWidget {
 
@@ -20,7 +21,6 @@ class _EventCardState extends State<EventCard> {
   
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
   
@@ -33,23 +33,14 @@ class _EventCardState extends State<EventCard> {
   
   @override
   Widget build(BuildContext context) {
-    print("building");
-//    buildUsers();
-    if (isLoading) {
-      return SpinKitCircle(
-        size: 10,
-        color: Colors.blueAccent,
-      );
-    }
+    String date = widget.event.eventDate != null ? TimeService.displayHour(
+        DateTime.parse(widget.event.eventDate).hour, DateTime.parse(widget.event.eventDate).minute): "";
     return ListTile(
-      leading: Column(
-        children: <Widget>[
-          Icon(FontAwesomeIcons.infinity),
-        ],
-      ),
+      leading: Icon(FontAwesomeIcons.smile),
       title: Text(widget.event.eventName),
       subtitle: Text(widget.event.eventDescription),
-
+      isThreeLine: true,
+      trailing: Text(date),
     );
   }
 }
