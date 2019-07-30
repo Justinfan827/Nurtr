@@ -11,12 +11,12 @@ import 'chat_screen.dart';
 
 class NewMessageScreen extends StatefulWidget {
   static String id = '/user_home_screen';
-  final User user;
+  final User me;
   final AuthService authService;
   final FirestoreDatabase dbService;
 
   NewMessageScreen(
-      {@required this.user,
+      {@required this.me,
       @required this.authService,
       @required this.dbService});
 
@@ -32,7 +32,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   @override
   void initState() {
     super.initState();
-    friendStream = widget.dbService.getFriendListStreamByUID(widget.user.uid);
+    friendStream = widget.dbService.getFriendListStreamByUID(widget.me.uid);
   }
 
   @override
@@ -103,7 +103,10 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
           snapshot: snapshot,
           itemBuilder: (BuildContext context, User user) => FriendListTile(
             friendInfo: user,
-            onPressed: () => _handleFriendSelection(user),
+            onPressed: () {
+              print("pressed on: ${user.firstName} ${user.uid}");
+              _handleFriendSelection(user);
+              },
             selected: _isFriendSelected(user.uid),
           ),
         );
@@ -153,21 +156,22 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     String chatId;
     if (user.directChatId == null) {
       // TODO: Create a new chat room!
-      print("Navigating to chat room with: ${user.firstName}");
-      chatId = await widget.dbService.createChatRoom(widget.user.uid, [user, widget.user]);
+//      print("Navigating to chat room with: ${user.uid} I am: ${widget.me.firstName}");
+      chatId = await widget.dbService.createChatRoom(widget.me.uid, [user, widget.me]);
     } else {
       // TODO: just grab the chatId from the user.
       chatId = user.directChatId;
     }
-    print("Chat ID: $chatId");
-//    Navigator.push(
-//      context,
-//      MaterialPageRoute(
-//        builder: (context) => ChatScreen(
-//          userStream: widget.dbService.getUserAsStream(user.uid),
-//          chatStream: widget.dbService.getMessageStreamByChatId(chatId)
-//        ),
-//      ),
-//    );
+//    print("Chat ID: $chatId");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          userStream: widget.dbService.getUserAsStream(user.uid),
+          roomStream: widget.dbService.getChatRoomStreamByChatId(chatId),
+          chatStream: widget.dbService.getMessageListStreamByChatId(chatId)
+        ),
+      ),
+    );
   }
 }

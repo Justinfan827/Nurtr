@@ -44,7 +44,7 @@ class _MessageTabState extends State<MessageTab> {
     Navigator.push(
         context,
         MaterialPageRoute(builder: (context) {
-          return NewMessageScreen(user: widget.user, authService: widget.authService, dbService: widget.dbService);
+          return NewMessageScreen(me: widget.user, authService: widget.authService, dbService: widget.dbService);
         })
     );
   }

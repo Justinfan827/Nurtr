@@ -55,13 +55,13 @@ class AuthService {
       'lastName': lastName,
       'email': email,
     };
-    var privateMap = {'passWord': password};
+    var privateMap = {'password': password};
     // Add to public document
     await FirestoreService.service
-        .setData(path: APIPath.myInfoDocument(user.uid), data: map);
+        .setDataInDocument(path: APIPath.myInfoDocument(user.uid), data: map);
     // Add to private document
     await FirestoreService.service
-        .setData(path: APIPath.myInfoPrivateCollection(user.uid), data: map);
+        .setDataInCollection(path: APIPath.myInfoPrivateCollection(user.uid), data: privateMap);
     return User.fromMap({...map, ...privateMap}, user.uid);
   }
 

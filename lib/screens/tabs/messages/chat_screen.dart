@@ -19,7 +19,9 @@ class ChatScreen extends StatefulWidget {
   static String id = '/chat_screen';
   final Stream<User> userStream;
   final Stream<List<Message>> chatStream;
-  ChatScreen({@required this.userStream, @required this.chatStream});
+  final Stream<ChatRoom> roomStream;
+
+  ChatScreen({@required this.userStream, @required this.chatStream, @required this.roomStream});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -107,14 +109,8 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void setupUsers(context) async {
-    this.me = Provider.of<Me>(context);
-    this.friend = Provider.of<User>(context);
-  }
-
   @override
   Widget build(BuildContext context) {
-    setupUsers(context);
     return Consumer<User>(
       builder: (context, user, _) => Scaffold(
         appBar: _buildAppBar(),

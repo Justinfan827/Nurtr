@@ -27,8 +27,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    print("DISPOSE: WelcomeScreen");
+  }
+
+  @override
   Widget build(BuildContext context) {
-    print("Rebuilding scaffold");
+    print("REBUILD: WelcomeScreen");
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(

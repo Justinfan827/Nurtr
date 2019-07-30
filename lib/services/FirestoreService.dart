@@ -18,10 +18,18 @@ class FirestoreService {
 
   static final FirestoreService service = FirestoreService._();
 
-  // setting a document data.
-  Future<String> setData(
+  // setting a document data. ID is specified in the path.
+  Future<String> setDataInDocument(
       {@required String path, @required Map<String, dynamic> data, bool merge = false}) async {
-    final reference = store.document(path);
+    DocumentReference reference = store.document(path);
+    await reference.setData(data, merge: merge);
+    return reference.documentID;
+  }
+
+  // setting a document given only path to collection. ID is auto generated.
+  Future<String> setDataInCollection(
+      {@required String path, @required Map<String, dynamic> data, bool merge = false}) async {
+    DocumentReference reference = store.collection(path).document();
     await reference.setData(data, merge: merge);
     return reference.documentID;
   }
@@ -45,20 +53,20 @@ class FirestoreService {
   }
 
   Stream<List<T>> getCollectionStream<T>(
-      {@required String path, @required T builder(Map<String, dynamic> data)}) {
+      {@required String path, @required T builder(Map<String, dynamic> data, String id)}) {
     final reference = store.collection(path);
     final snapshots = reference.snapshots();
     return snapshots.map(
       (snapshot) => snapshot.documents.map(
-        (doc) => builder(doc.data),
+        (doc) => builder(doc.data, doc.documentID),
       ).toList(),
     );
   }
 
   Stream<T> getDocumentStream<T>(
-      {@required String path, @required T builder(Map<String, dynamic> data)}) {
+      {@required String path, @required T builder(Map<String, dynamic> data, String id)}) {
     final reference = store.document(path);
     final snapshots = reference.snapshots();
-    return snapshots.map((doc) => builder(doc.data));
+    return snapshots.map((doc) => builder(doc.data, doc.documentID));
   }
 }

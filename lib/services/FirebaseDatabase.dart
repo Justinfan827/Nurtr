@@ -52,12 +52,14 @@ abstract class Database {
       String uid); // where event/{id}/ participants.uid = true.
   Stream<List<Event>> getEventListStreamBetweenFriends(List<String> uid);
 
-  // Chat streams
-  Stream<List<ChatRoom>> getChatRoomListStreamByUID(
-      String uid); // where room/{id}.participants.uid = true
-  Stream<Message> getLatestMessageStreamByChatId(String chatId);
 
-  Stream<List<Message>> getMessageStreamByChatId(String chatId);
+  // Chat streams
+  Stream<List<ChatRoom>> getChatRoomListStreamByUID(String uid); // where room/{id}.participants.uid = true
+  Stream<ChatRoom> getChatRoomStreamByChatId(String chatId);
+
+
+    Stream<Message> getLatestMessageStreamByChatId(String chatId);
+  Stream<List<Message>> getMessageListStreamByChatId(String chatId);
 
   // Friend streams
   Stream<List<User>> getFriendListStreamByUID(String uid);
@@ -99,7 +101,7 @@ class FirestoreDatabase extends Database {
   Stream<Me> getMyUserStream(String uid) {
     return FirestoreService.service.getDocumentStream(
         path: APIPath.myInfoDocument(uid),
-        builder: (doc) => User.fromMap(doc, uid));
+        builder: (doc, id) => User.fromMap(doc, id));
   }
 
   /**
@@ -188,23 +190,25 @@ class FirestoreDatabase extends Database {
   Future<String> createChatRoom(
       String creatorUid, List<User> participants) async {
     //  Create chat room with all users.
-    String chatId = await FirestoreService.service.setData(
+    List usersPlainObject = participants.map((user) => user.toMap()).toList(growable: false);
+    String chatId = await FirestoreService.service.setDataInCollection(
       path: APIPath.rootRoomsCollection(),
       data: {
         'rommName': null,
-        'participants': participants.map((user) => user.toMap()).toList(),
+        'participants': usersPlainObject,
         'roomSize': participants.length,
       },
     );
-    print ("success! chatId: ${chatId}");
-    // Create a write action for each user.
-    List<WritePayload> writeActions = participants
-        .map((user) => WritePayload(
-            path: APIPath.myFriendsDocument(creatorUid, user.uid),
+    // Create a write action for each user that isn't the creator.
+    List<String> friends = participants.map((user) => user.uid).toList();
+    friends.remove(creatorUid);
+    print(friends.toString());
+    List<WritePayload> writeActions = friends.map((uid) => WritePayload(
+            path: APIPath.myFriendDocument(creatorUid, uid),
             data: {UserKeys.directChatId(): chatId}))
         .toList();
 
-    // Do batch write.
+    // Do batch write. TODO: if this update fails, remove the chat room?
     await FirestoreService.service
         .batchSetData(infoList: writeActions, merge: true);
 
@@ -271,7 +275,7 @@ class FirestoreDatabase extends Database {
   Stream<List<User>> getFriendListStreamByUID(String uid) {
     return FirestoreService.service.getCollectionStream(
       path: APIPath.myFriendsCollection(uid),
-      builder: (data) => User.fromMap(data, uid),
+      builder: (Map data, String id) => User.fromMap(data, id),
     );
   }
 
@@ -291,6 +295,19 @@ class FirestoreDatabase extends Database {
   Stream<Message> getLatestMessageStreamByChatId(String chatId) {
     // TODO: implement getLatestMessageStreamByChatId
     return null;
+  }
+
+  @override
+  Stream<List<Message>> getMessageListStreamByChatId(String chatId) {
+    return FirestoreService.service
+        .getCollectionStream(path: APIPath.rootRoomsCollection(), builder: null);
+  }
+
+  @override
+  Stream<ChatRoom> getChatRoomStreamByChatId(String chatId) {
+    return FirestoreService.service.getDocumentStream(
+        path: APIPath.chatRoomDocument(chatId),
+        builder: (Map data, String id) => ChatRoom.fromMap(data, id));
   }
 
   @override
@@ -329,9 +346,5 @@ class FirestoreDatabase extends Database {
     return null;
   }
 
-  @override
-  Stream<List<Message>> getMessageStreamByChatId(String chatId) {
-    return FirestoreService.service
-        .getCollectionStream(path: null, builder: null);
-  }
+
 }

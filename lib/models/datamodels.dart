@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
 
-/*abstract class FireStoreModel<T> {
+abstract class FireStoreModel {
   Map<String, dynamic> toMap();
 
-}*/
+}
 
 /*
 Firestore user document.
@@ -85,7 +85,7 @@ class User {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    var map = {
       '${UserKeys.firstName()}': firstName,
       '${UserKeys.lastName()}': lastName,
       '${UserKeys.lastName()}': email,
@@ -93,6 +93,7 @@ class User {
       '${UserKeys.goal()}': goal,
       '${UserKeys.directChatId()}': directChatId,
     };
+    return map;
   }
 
   // way to instantiate user given document snapshot
@@ -173,4 +174,33 @@ class ImageMessage {}
 
 class EventMessage {}
 
-class ChatRoom {}
+
+class ChatRoomKeys {
+  static  String roomName() => 'roomName';
+  static  String roomSize() => 'roomSize';
+  static  String id() => 'id';
+}
+
+class ChatRoom extends FireStoreModel{
+  String roomName;
+  String roomSize;
+  String id;
+
+  ChatRoom({this.roomName, this.roomSize, this.id});
+
+  factory ChatRoom.fromMap(Map<String, dynamic> map, id) {
+    return ChatRoom(
+      id: id,
+      roomName: map[ChatRoomKeys.roomName()] ?? null,
+      roomSize: map[ChatRoomKeys.roomSize()],
+    );
+  }
+
+  @override
+  Map<String, dynamic> toMap() {
+    // TODO: implement toMap
+    return {
+      ChatRoomKeys.roomName() : this.roomName,
+      ChatRoomKeys.roomSize() : this.roomSize,
+    };
+  }}
