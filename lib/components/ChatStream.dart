@@ -1,3 +1,4 @@
+import 'package:flash_chat/components/ListItemBuilder.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -7,7 +8,7 @@ import 'package:provider/provider.dart';
 
 class ChatStream extends StatefulWidget {
   // this the connecion collection in fb
-  final Stream<QuerySnapshot> msgStream;
+  final Stream<List<Message>> msgStream;
   final ScrollController scrollController;
 
   ChatStream(
@@ -29,68 +30,104 @@ class _ChatStreamState extends State<ChatStream> {
   @override
   Widget build(BuildContext context) {
     Me me = Provider.of<Me>(context);
-    User friend = Provider.of<User>(context);
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<List<Message>>(
       stream: widget.msgStream,
-      builder: (context, snapshot) {
-        print('building stream');
-        if (!snapshot.hasData) {
-          return Expanded(
-            child: Container(
-              child: Center(
-                  child: SpinKitCircle(
-                color: Colors.blueAccent,
-                size: 60,
-              )),
-            ),
-          );
-        }
-        List<Widget> msg = [];
-        print(snapshot.toString());
-        snapshot.data.documents.reversed.forEach((doc) {
-          String sender = doc.data['senderName'];
-          String senderEmail = doc.data['senderEmail'];
-
-          String text = doc.data['content'];
-
-          bool isMe = (me.email == senderEmail);
-          msg.add(
-            //TODO: refactor to lightweight widget
-            Column(
+      initialData: [],
+      builder: (context, AsyncSnapshot<List<Message>> snapshot) {
+        print("Stream length: ${snapshot.data.toString()}");
+        return ListItemBuilder(
+          snapshot: snapshot,
+          itemBuilder: (context, Message msg) {
+            String senderName = msg.senderName;
+            String senderUid = msg.senderUid;
+            bool isMe = (me.uid == senderUid);
+            print("senderName: ${senderName}");
+            return Container(
+              height: 100,
+              width: 100,
+              child: Column(
+              mainAxisSize: MainAxisSize.max,
               crossAxisAlignment:
                   isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                Text(
-                  sender,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 10.0,
+                children: [
+                  Text(
+                    senderName,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 10.0,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 2,
-                ),
-                MessageBubble(
-                  isMe: isMe,
-                  text: text,
-                ),
-              ],
-            ),
-          );
-        });
-
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView(
-              reverse: true,
-              children: msg,
-              controller: widget.scrollController,
-            ),
-          ),
-        );
+                  SizedBox(
+                    height: 2,
+                  ),
+                  MessageBubble(
+                    isMe: isMe,
+                    text: msg.content,
+                  ),
+                ],
+              ),
+            );
+          });
       },
-    );
+        );
+
+//        print('building stream');
+//        if (!snapshot.hasData) {
+//          return Expanded(
+//            child: Container(
+//              child: Center(
+//                  child: SpinKitCircle(
+//                color: Colors.blueAccent,
+//                size: 60,
+//              )),
+//            ),
+//          );
+//        }
+//        List<Widget> msg = [];
+//        print(snapshot.toString());
+//        snapshot.data.forEach((Message msg) {
+//          String sender = msg.data['senderName'];
+//          String senderEmail = msg.data['senderEmail'];
+//
+//          String text = doc.data['content'];
+//
+//          bool isMe = (me.email == senderEmail);
+//          msg.add(
+//            //TODO: refactor to lightweight widget
+//            Column(
+//              crossAxisAlignment:
+//                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+//              children: [
+//                Text(
+//                  sender,
+//                  style: TextStyle(
+//                    color: Colors.grey,
+//                    fontSize: 10.0,
+//                  ),
+//                ),
+//                SizedBox(
+//                  height: 2,
+//                ),
+//                MessageBubble(
+//                  isMe: isMe,
+//                  text: text,
+//                ),
+//              ],
+//            ),
+//          );
+//        });
+//
+//        return Expanded(
+//          child: Padding(
+//            padding: const EdgeInsets.all(8.0),
+//            child: ListView(
+//              reverse: true,
+//              children: msg,
+//              controller: widget.scrollController,
+//            ),
+//          ),
+//        );
+//      },
   }
 }
 

@@ -18,10 +18,7 @@ import 'new_messages_screen.dart';
  */
 class MessageTab extends StatefulWidget {
   static String id = '/user_home_screen';
-  final Me user;
-  final AuthService authService;
-  final FirestoreDatabase dbService;
-  MessageTab({@required this.user, @required this.authService, @required this.dbService});
+  MessageTab();
 
   @override
   _MessageTabState createState() => _MessageTabState();
@@ -44,7 +41,7 @@ class _MessageTabState extends State<MessageTab> {
     Navigator.push(
         context,
         MaterialPageRoute(builder: (context) {
-          return NewMessageScreen(me: widget.user, authService: widget.authService, dbService: widget.dbService);
+          return NewMessageScreen();
         })
     );
   }
@@ -60,7 +57,6 @@ class _MessageTabState extends State<MessageTab> {
 
   @override
   Widget build(BuildContext context) {
-    print("User ${widget.user.toString()}");
     return Scaffold(
       appBar: _buildAppBar(),
       body: Padding(
@@ -177,7 +173,7 @@ class _MessageTabState extends State<MessageTab> {
   }
 
   void signOut() {
-    widget.authService.signOutUser();
+    Provider.of<AuthService>(context).signOutUser();
     Navigator.pop(context);
   }
 }

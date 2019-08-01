@@ -1,24 +1,24 @@
 import 'package:flash_chat/components/FriendListTile.dart';
 import 'package:flash_chat/components/ListItemBuilder.dart';
 import 'package:flash_chat/components/LoadingContainer.dart';
+import 'package:flash_chat/enums.dart';
 import 'package:flash_chat/models/datamodels.dart';
+import 'package:flash_chat/screens/BaseView.dart';
 import 'package:flash_chat/services/AuthService.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
+import 'package:flash_chat/services/Router.dart';
+import 'package:flash_chat/viewmodels/NewMessageScreenViewModel.dart';
+import 'package:flash_chat/viewmodels/locator.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
 import 'chat_screen.dart';
 
 class NewMessageScreen extends StatefulWidget {
   static String id = '/user_home_screen';
-  final User me;
-  final AuthService authService;
-  final FirestoreDatabase dbService;
 
-  NewMessageScreen(
-      {@required this.me,
-      @required this.authService,
-      @required this.dbService});
+  NewMessageScreen();
 
   @override
   _NewMessageScreenState createState() => _NewMessageScreenState();
@@ -30,24 +30,28 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   Set<String> _selectedFriends = {};
 
   @override
-  void initState() {
-    super.initState();
-    friendStream = widget.dbService.getFriendListStreamByUID(widget.me.uid);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
+    return BaseView<NewMessageScreenViewModel>(
+      onModelReady: (model) {
+        model.getFriendStream(Provider.of<Me>(context).uid);
+        this.friendStream = model.friendListStream;
+      },
+      builder: (context, model, _) {
+        if (model.state == ViewState.Busy) {
+          return LoadingContainer();
+        }
+        return Scaffold(
           appBar: _buildAppBar(),
           body: Column(
             children: <Widget>[
               _buildUtils(),
               Expanded(
-                child: _buildFriendList(),
+                child: _buildFriendList(model),
               ),
             ],
-          )),
+          ),
+        );
+      },
     );
   }
 
@@ -91,10 +95,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     );
   }
 
-  Widget _buildFriendList() {
-    if (friendStream == null) {
-      return LoadingContainer();
-    }
+  Widget _buildFriendList(NewMessageScreenViewModel model) {
     return StreamBuilder<List<User>>(
       initialData: [],
       stream: this.friendStream,
@@ -105,8 +106,8 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
             friendInfo: user,
             onPressed: () {
               print("pressed on: ${user.firstName} ${user.uid}");
-              _handleFriendSelection(user);
-              },
+              _handleFriendSelection(user, model);
+            },
             selected: _isFriendSelected(user.uid),
           ),
         );
@@ -114,10 +115,9 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     );
   }
 
-  void _handleFriendSelection(User user) {
+  void _handleFriendSelection(User user, NewMessageScreenViewModel model) {
     if (_directMessageFlag) {
-
-      _navigateToChatRoom(user);
+      _navigateToChatRoom(user, model);
     }
     setState(() {
       _isFriendSelected(user.uid)
@@ -152,26 +152,17 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     });
   }
 
-  Future<void> _navigateToChatRoom(User user) async {
+  Future<void> _navigateToChatRoom(User user, NewMessageScreenViewModel model) async {
     String chatId;
+    Me me = Provider.of<Me>(context);
     if (user.directChatId == null) {
       // TODO: Create a new chat room!
 //      print("Navigating to chat room with: ${user.uid} I am: ${widget.me.firstName}");
-      chatId = await widget.dbService.createChatRoom(widget.me.uid, [user, widget.me]);
+      chatId = await model.createChatRoom(me.uid, [user, me]);
     } else {
       // TODO: just grab the chatId from the user.
       chatId = user.directChatId;
     }
-//    print("Chat ID: $chatId");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          userStream: widget.dbService.getUserAsStream(user.uid),
-          roomStream: widget.dbService.getChatRoomStreamByChatId(chatId),
-          chatStream: widget.dbService.getMessageListStreamByChatId(chatId)
-        ),
-      ),
-    );
+    Navigator.pushNamed(context, 'chatScreen', arguments: ChatScreenRouteArgs(chatRoomId: chatId));
   }
 }

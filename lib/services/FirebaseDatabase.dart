@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/models/datamodels.dart';
+import 'package:flash_chat/viewmodels/locator.dart';
 import 'package:flutter/material.dart';
 import 'ApiPath.dart';
 import 'AuthService.dart';
 import 'FirestoreService.dart';
 
 final store = Firestore.instance;
-final auth = AuthService();
+final auth = locator<AuthService>();
 
 // define application API here: this is the database that gets exposed once the user is logged in.
 // All authentication is done using the auth_service.
@@ -52,13 +53,13 @@ abstract class Database {
       String uid); // where event/{id}/ participants.uid = true.
   Stream<List<Event>> getEventListStreamBetweenFriends(List<String> uid);
 
-
   // Chat streams
-  Stream<List<ChatRoom>> getChatRoomListStreamByUID(String uid); // where room/{id}.participants.uid = true
+  Stream<List<ChatRoom>> getChatRoomListStreamByUID(
+      String uid); // where room/{id}.participants.uid = true
   Stream<ChatRoom> getChatRoomStreamByChatId(String chatId);
 
+  Stream<Message> getLatestMessageStreamByChatId(String chatId);
 
-    Stream<Message> getLatestMessageStreamByChatId(String chatId);
   Stream<List<Message>> getMessageListStreamByChatId(String chatId);
 
   // Friend streams
@@ -73,14 +74,18 @@ abstract class Database {
 
   // Messaging (eventually work to send goals)
   // Catch message type to see how to display message.
-  Future<void> sendMessage(String uid, String friendUid, Message message);
+  Future<void> sendMessage(String chatRoomId, Message message);
 }
 
 // This is the application API.
 class FirestoreDatabase extends Database {
-  String uid;
+  String _uid;
 
-  FirestoreDatabase({@required this.uid}) : assert(uid != null);
+  FirestoreDatabase();
+
+  void initializeWithUid(String uid) {
+    _uid = uid;
+  }
 
   //Get a single user from firestore without the stream.
   Future<User> getUser(String id) async {
@@ -190,7 +195,8 @@ class FirestoreDatabase extends Database {
   Future<String> createChatRoom(
       String creatorUid, List<User> participants) async {
     //  Create chat room with all users.
-    List usersPlainObject = participants.map((user) => user.toMap()).toList(growable: false);
+    List usersPlainObject =
+        participants.map((user) => user.toMap()).toList(growable: false);
     String chatId = await FirestoreService.service.setDataInCollection(
       path: APIPath.rootRoomsCollection(),
       data: {
@@ -203,7 +209,8 @@ class FirestoreDatabase extends Database {
     List<String> friends = participants.map((user) => user.uid).toList();
     friends.remove(creatorUid);
     print(friends.toString());
-    List<WritePayload> writeActions = friends.map((uid) => WritePayload(
+    List<WritePayload> writeActions = friends
+        .map((uid) => WritePayload(
             path: APIPath.myFriendDocument(creatorUid, uid),
             data: {UserKeys.directChatId(): chatId}))
         .toList();
@@ -299,8 +306,10 @@ class FirestoreDatabase extends Database {
 
   @override
   Stream<List<Message>> getMessageListStreamByChatId(String chatId) {
-    return FirestoreService.service
-        .getCollectionStream(path: APIPath.rootRoomsCollection(), builder: null);
+    return FirestoreService.service.getCollectionStream(
+      path: APIPath.roomMessageCollection(chatId),
+      builder: (Map data, String id) => Message.fromMap(data, id),
+    );
   }
 
   @override
@@ -317,9 +326,10 @@ class FirestoreDatabase extends Database {
   }
 
   @override
-  Future<void> sendMessage(String uid, String friendUid, Message message) {
-    // TODO: implement sendMessage
-    return null;
+  Future<void> sendMessage(String chatRoomId, Message message) async {
+    await FirestoreService.service.setDataInCollection(
+        path: APIPath.roomMessageCollection(chatRoomId), data: message.toMap(),);
+    // TODO: confirmation of success?
   }
 
   @override
@@ -345,6 +355,4 @@ class FirestoreDatabase extends Database {
     // TODO: implement updateUser
     return null;
   }
-
-
 }

@@ -1,31 +1,36 @@
+import 'package:flash_chat/services/AuthService.dart';
+import 'package:flash_chat/services/Router.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/screens/intro/welcome_screen.dart';
 import 'package:flash_chat/screens/intro/login_screen.dart';
 import 'package:flash_chat/screens/intro/registration_screen.dart';
 import 'package:flash_chat/screens/tabs/messages/chat_screen.dart';
 import 'package:flash_chat/screens/tabs/tab_root.dart';
+import 'package:flash_chat/viewmodels/locator.dart';
+import 'package:provider/provider.dart';
 
 import 'constants.dart';
-void main() => runApp(FlashChat());
+import 'models/datamodels.dart';
+void main() {
+  setupLocator();
+  runApp(FlashChat());
+}
 
 class FlashChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData.light().copyWith(
-        appBarTheme: AppBarTheme(
-          color: Colors.black
-        )
+    return StreamProvider<Me>(
+      builder: (context) => locator<AuthService>().loggedInUserStream.stream,
+      initialData: Me.initial(),
+      child: MaterialApp(
+        theme: ThemeData.light().copyWith(
+          appBarTheme: AppBarTheme(
+            color: Colors.black
+          )
+        ),
+        initialRoute: '/',
+        onGenerateRoute: Router.generateRoute,
       ),
-      initialRoute: WelcomeScreen.id,
-
-      routes: {
-        WelcomeScreen.id : (context) => WelcomeScreen(),
-//        LoginScreen.id : (context) => LoginScreen(),
-        ChatScreen.id : (context) => ChatScreen(),
-//        RegistrationScreen.id: (context) => RegistrationScreen(),
-        TabRootScreen.id: (context) => TabRootScreen(),
-      },
     );
   }
 }

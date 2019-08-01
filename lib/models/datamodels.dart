@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flash_chat/enums.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
 
 abstract class FireStoreModel {
@@ -37,6 +38,15 @@ class Me extends User {
         goal: user.goal,
         directChatId: user.directChatId);
   }
+  static Me initial() {
+    return Me(
+        goal: "",
+        firstName: "",
+        email: "",
+        uid: "",
+        directChatId: ""
+    );
+  }
 }
 
 // Convenience class to make adding to firestore easier.
@@ -57,6 +67,15 @@ class User {
   }
 
 
+  static Me initial() {
+    return Me(
+        goal: "",
+        firstName: "",
+        email: "",
+        uid: "",
+        directChatId: ""
+    );
+  }
 
   final String firstName;
   final String lastName;
@@ -109,6 +128,8 @@ class User {
       directChatId: data[UserKeys.directChatId()] ?? null
     );
   }
+
+
 }
 
 class Event {
@@ -164,7 +185,41 @@ class Event {
 
 class Goal {}
 
-abstract class Message {}
+
+class MessageKeys {
+  static String get content => 'content';
+  static String get contentType => 'contentType';
+  static String get senderUid => 'senderUid';
+  static String get senderName => 'senderName';
+}
+
+class Message {
+  dynamic content;
+  String contentType;
+  String senderUid;
+  String senderName;
+
+  Message({this.content, this.contentType, this.senderName, this.senderUid});
+
+  factory Message.fromMap(Map data, String id) {
+    print("FROM MAP: ${data.toString()}");
+    return Message(
+      content: data[MessageKeys.content] ?? "",
+      contentType: data[MessageKeys.contentType] ?? "",
+      senderUid: data[MessageKeys.senderUid] ?? "",
+      senderName: data[MessageKeys.senderName] ?? ""
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      content: this.content ?? "",
+      contentType: this.contentType ?? "",
+      senderUid: this.senderUid ?? "",
+      senderName: this.senderName ?? ""
+    };
+  }
+}
 
 class TextMessage {}
 

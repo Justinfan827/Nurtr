@@ -9,30 +9,11 @@ import 'package:flash_chat/screens/intro/registration_screen.dart';
 import 'package:flash_chat/components/RoundedButton.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
-import 'package:flash_chat/models/SignInBloc.dart';
+import 'package:flash_chat/viewmodels/SignInBloc.dart';
 import 'package:provider/provider.dart';
 
-class WelcomeScreen extends StatefulWidget {
-  static String id = '/';
 
-  @override
-  _WelcomeScreenState createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    print("DISPOSE: WelcomeScreen");
-  }
-
+class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print("REBUILD: WelcomeScreen");
@@ -62,9 +43,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Widget _buildSignInForm() {
     return Provider<SignInBloc>(
-      builder: (_) => SignInBloc(
-        authService: AuthService(),
-      ),
+      builder: (_) => SignInBloc(),
       dispose: (_, bloc) {
         print("disposing sign in bloc.");
         bloc.dispose();

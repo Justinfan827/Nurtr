@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flash_chat/models/SignInModel.dart';
+import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/services/AuthService.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
-
-import 'datamodels.dart';
+import 'package:flash_chat/viewmodels/locator.dart';
 
 class SignInBloc {
-  SignInBloc({this.authService});
-  final AuthService authService;
+  SignInBloc();
+  final AuthService authService = locator<AuthService>();
   final StreamController<SignInModel> _modelController = StreamController<SignInModel>();
   Stream<SignInModel> get modelStream => _modelController.stream;
   SignInModel _model = SignInModel(); // initialize with default values

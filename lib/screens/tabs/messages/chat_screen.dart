@@ -1,5 +1,7 @@
 import 'package:flash_chat/components/StreamItemBuilder.dart';
+import 'package:flash_chat/screens/BaseView.dart';
 import 'package:flash_chat/services/time_service.dart';
+import 'package:flash_chat/viewmodels/ChatScreenViewModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,11 +19,10 @@ final _auth = FirebaseAuth.instance;
 
 class ChatScreen extends StatefulWidget {
   static String id = '/chat_screen';
-  final Stream<User> userStream;
-  final Stream<List<Message>> chatStream;
-  final Stream<ChatRoom> roomStream;
 
-  ChatScreen({@required this.userStream, @required this.chatStream, @required this.roomStream});
+  String chatRoomId;
+
+  ChatScreen({@required this.chatRoomId});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -29,6 +30,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   Stream<QuerySnapshot> _msgStream;
+
   //user information;
   User me;
   String myUID;
@@ -49,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // Create a text controller. Later, use it to retrieve the
   // current value of the TextField.
   final myController = TextEditingController();
+
   get msgInput => myController.text;
 
   @override
@@ -68,23 +71,24 @@ class _ChatScreenState extends State<ChatScreen> {
     displayDate = "";
   }
 
-  void messageSendHandler() {
+  void messageSendHandler(ChatScreenViewModel model) {
+    Me me = Provider.of<Me>(context);
     if (msgInput.length > 0) {
-//      widget.chatData.document().setData({
-//        'content': myController.text,
-//        'senderEmail': me.email,
-//        'senderName': me.email
-//      });
+      Message msg = Message(
+          contentType: "TEXT",
+          content: msgInput,
+          senderName: me.firstName,
+          senderUid: me.uid);
+      model.sendMessage(widget.chatRoomId, msg);
     }
     myController.clear();
   }
-
 
   void setDate(DateTime date) {
     print("SetDaterCalled with: $date in chat_screen.dart");
     setState(() {
       this.displayDate =
-      "${dayMap[date.weekday]} ${monthMap[date.month]} ${date.day} ${date.year} at ${TimeService.displayHour(date.hour, date.minute)}";
+          "${dayMap[date.weekday]} ${monthMap[date.month]} ${date.day} ${date.year} at ${TimeService.displayHour(date.hour, date.minute)}";
       print(displayDate);
       eventISOUTCDate = date.toUtc().toIso8601String();
     });
@@ -93,8 +97,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void setTimeSchedule(context) {
     DatePicker.showDateTimePicker(context, showTitleActions: true,
         onChanged: (date) {
-        print('change $date');
-        setDate(date);
+      print('change $date');
+      setDate(date);
     }, onConfirm: (date) {
       print('change $date');
       setDate(date);
@@ -111,19 +115,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<User>(
-      builder: (context, user, _) => Scaffold(
+    return BaseView<ChatScreenViewModel>(
+      onModelReady: (model) {
+        model.getChatRoomMessageStream(widget.chatRoomId);
+        model.getChatRoomInfoStream(widget.chatRoomId);
+      },
+      builder: (context, model, _) => Scaffold(
         appBar: _buildAppBar(),
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-//              Container(
-//                child: ChatStream(
-//                    msgStream: this._msgStream,
-//                    scrollController: _scrollController),
-//              ),
+              Expanded(
+                child: Container(
+                  child: ChatStream(
+                      msgStream: model.chatRoomMessageListStream,
+                      scrollController: _scrollController),
+                ),
+              ),
               _hiddenWidget,
               Container(
                 decoration: kMessageContainerDecoration,
@@ -136,7 +146,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: TextField(
                           style: TextStyle(),
                           controller: myController,
-                          onEditingComplete: messageSendHandler,
+                          onEditingComplete: () => messageSendHandler(model),
                           onChanged: (value) => updateState(),
                           decoration: kMessageTextFieldDecoration,
                         ),
@@ -148,7 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Icon(FontAwesomeIcons.calendar),
                       ),
                       FlatButton(
-                        onPressed: messageSendHandler,
+                        onPressed: () => messageSendHandler(model),
                         child: Text(
                           'Send',
                           style: kSendButtonTextStyle,
@@ -257,23 +267,13 @@ class _ChatScreenState extends State<ChatScreen> {
 //  }
   void updateState() {
     print("Value: $msgInput");
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   Widget _buildAppBar() {
     return AppBar(
       leading: null,
-      title: StreamBuilder<User>(
-        stream: widget.userStream,
-        builder: (context, AsyncSnapshot<User> snapshot) {
-          return StreamItemBuilder<User>(
-            snapshot: snapshot,
-            itemBuilder: (User data) => Text(data.firstName),
-          );
-        },
-      ),
+      title: Text(Provider.of<Me>(context).firstName),
     );
   }
 }

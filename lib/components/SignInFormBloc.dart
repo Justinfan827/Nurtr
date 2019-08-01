@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flash_chat/models/SignInModel.dart';
 import 'package:flash_chat/models/datamodels.dart';
-import 'package:flash_chat/models/SignInBloc.dart';
+import 'package:flash_chat/services/Router.dart';
+import 'package:flash_chat/viewmodels/SignInBloc.dart';
 import 'package:flash_chat/screens/tabs/tab_root.dart';
 import 'package:flash_chat/services/FormValidators.dart';
 import 'package:flash_chat/services/AuthService.dart';
@@ -34,23 +35,7 @@ class _SignInFormBlocState extends State<SignInFormBloc> {
   final TextEditingController _lastNameController = TextEditingController();
 
   Future<void> navigateToTabScreen(User me) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        // wrap with auth provider so all screens below get the auth information.
-        builder: (context) => MultiProvider(
-            providers: [
-              Provider<User>.value(value: me),
-              Provider<AuthService>.value(value: widget.bloc.authService),
-            ],
-            child: TabRootScreen(
-              user: me,
-              authService: widget.bloc.authService,
-              firestoreDB: FirestoreDatabase(uid: me.uid),
-            )),
-      ),
-    );
+    Navigator.pushNamed(context, Router.newMessageScreen);
   }
 
   Future<void> submitForm() async {

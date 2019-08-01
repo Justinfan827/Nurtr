@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
 import 'package:flash_chat/services/ApiPath.dart';
+import 'package:flash_chat/viewmodels/locator.dart';
 import 'FirestoreService.dart';
 
 // This class should be the only class that needs to mess with Firebase user.
@@ -11,6 +12,9 @@ import 'FirestoreService.dart';
 final auth = FirebaseAuth.instance;
 
 class AuthService {
+
+  StreamController<Me> loggedInUserStream = StreamController<Me>();
+
   /// Sign in firebase user.
   Future<Me> signInUser(String email, String pword) async {
     await auth.signInWithEmailAndPassword(
@@ -18,7 +22,10 @@ class AuthService {
       password: pword,
     );
 
-    return getCurrentAuthenticatedUser();
+    Me me = await getCurrentAuthenticatedUser();
+    // IMPORTANT. This allows calls to firebase in the firestore service to work.
+    locator<FirestoreDatabase>().initializeWithUid(me.uid);
+    return me;
   }
 
   /// Sign out firebase user.
@@ -33,7 +40,10 @@ class AuthService {
       path: APIPath.myInfoDocument(user.uid),
       builder: (data) => User.fromMap(data, user.uid),
     );
-    return Me.fromUser(u);
+
+    Me me = Me.fromUser(u);
+    loggedInUserStream.add(me);
+    return me;
   }
 
   /// Stream to listen to changes in user.
@@ -62,7 +72,9 @@ class AuthService {
     // Add to private document
     await FirestoreService.service
         .setDataInCollection(path: APIPath.myInfoPrivateCollection(user.uid), data: privateMap);
-    return User.fromMap({...map, ...privateMap}, user.uid);
+    Me me = Me.fromUser(User.fromMap({...map, ...privateMap}, user.uid));
+    loggedInUserStream.add(me);
+    return me;
   }
 
   /// This should never be called. Only the database service should call this.

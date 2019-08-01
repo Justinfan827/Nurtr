@@ -16,11 +16,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class TabRootScreen extends StatefulWidget {
   static String id = '/UserHomeScreen';
-  final AuthService authService;
-  final FirestoreDatabase firestoreDB;
-  final Me user;
-
-  TabRootScreen({@required this.authService, @required this.user, @required this.firestoreDB});
+  TabRootScreen();
 
   @override
   _TabRootScreenState createState() => _TabRootScreenState();
@@ -48,13 +44,12 @@ class _TabRootScreenState extends State<TabRootScreen> {
     //construct blocs needed for the immediate children.
 
     tabs = [
-      MessageTab(user: widget.user, authService: widget.authService, dbService: widget.firestoreDB),
+      MessageTab(),
       EventTabScreen(),
       ProfileTabScreen(),
     ];
 
     _providers = [
-      Provider<Me>.value(value: widget.user),
     ];
     setState(() {
       isLoading = false;
@@ -68,27 +63,26 @@ class _TabRootScreenState extends State<TabRootScreen> {
 
     // Navigating to tabbed events. Provide stream of events.
     if (_selectedIndex == 1) {
-      try {
-        Stream<List<Event>> eventsStream = store
-            .collection('events')
-            .where('participantID.${widget.user.uid}', isEqualTo: true)
-            .snapshots()
-            .map((query) => Event.generateEvents(query));
-        _providers.add(
-          StreamProvider<List<Event>>.value(
-            value: eventsStream,
-            initialData: [],
-          ),
-        );
-      } catch (e) {
-        print(e);
-      }
+//      try {
+//        Stream<List<Event>> eventsStream = store
+//            .collection('events')
+//            .where('participantID.${Provid}', isEqualTo: true)
+//            .snapshots()
+//            .map((query) => Event.generateEvents(query));
+//        _providers.add(
+//          StreamProvider<List<Event>>.value(
+//            value: eventsStream,
+//            initialData: [],
+//          ),
+//        );
+//      } catch (e) {
+//        print(e);
+//      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print("Tab root's user ${widget.user.toString()}");
     if (isLoading) {
       return Center(
         child: Container(
