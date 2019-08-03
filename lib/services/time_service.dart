@@ -12,4 +12,11 @@ class TimeService {
       return "${(hour)}:${minute}pm";
     }
   }
+
+  static String getMessageTime(DateTime date) {
+    int hour = date.hour;
+    int minute = date.minute;
+    String display = displayHour(hour, minute);
+    return display;
+  }
 }

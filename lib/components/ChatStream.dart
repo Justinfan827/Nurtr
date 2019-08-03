@@ -37,6 +37,7 @@ class _ChatStreamState extends State<ChatStream> {
         print("Stream length: ${snapshot.data.toString()}");
         return ListItemBuilder(
           snapshot: snapshot,
+          reverse: true,
           itemBuilder: (context, Message msg) {
             String senderName = msg.senderName;
             String senderUid = msg.senderUid;

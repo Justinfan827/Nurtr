@@ -7,22 +7,23 @@ typedef ItemWidgetBuilder<T> = Widget Function(BuildContext context, T item);
 class ListItemBuilder<T> extends StatelessWidget {
   final itemBuilder;
   final AsyncSnapshot snapshot;
-
-  ListItemBuilder({Key key, this.snapshot, this.itemBuilder}) : super(key: key);
+  final bool reverse;
+  ListItemBuilder({Key key, this.snapshot, this.itemBuilder, this.reverse}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (snapshot.hasData) {
-      final List<T> items = snapshot.data;
+      List<T> items = snapshot.data;
+      if (reverse != null && reverse) {
+        items = items.reversed.toList();
+      }
       if (items.isNotEmpty) {
         return _buildListItem(items);
       } else {
         return Container();
       }
     } else if (snapshot.hasError) {
-      return Container(
-        child: Text("Something went wrong"),
-      );
+        return Text("Something went wrong: ${snapshot.error}");
     }
     return LoadingContainer();
   }
@@ -30,6 +31,7 @@ class ListItemBuilder<T> extends StatelessWidget {
   Widget _buildListItem(List<T> items) {
     return ListView.builder(
       itemCount: items.length,
+      reverse: reverse ?? false,
       itemBuilder: (context, index) => itemBuilder(context, items[index]),
     );
   }

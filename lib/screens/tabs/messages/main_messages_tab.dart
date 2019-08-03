@@ -1,4 +1,10 @@
+import 'package:flash_chat/components/ListItemBuilder.dart';
+import 'package:flash_chat/components/ReactiveFriendListTile.dart';
+import 'package:flash_chat/components/TextStream.dart';
+import 'package:flash_chat/screens/BaseView.dart';
 import 'package:flash_chat/services/ApiPath.dart';
+import 'package:flash_chat/services/Router.dart';
+import 'package:flash_chat/viewmodels/MainMessageTabViewModel.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flash_chat/constants.dart';
@@ -18,6 +24,7 @@ import 'new_messages_screen.dart';
  */
 class MessageTab extends StatefulWidget {
   static String id = '/user_home_screen';
+
   MessageTab();
 
   @override
@@ -38,12 +45,9 @@ class _MessageTabState extends State<MessageTab> {
   }
 
   void _openAddFriendScreen() async {
-    Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) {
-          return NewMessageScreen();
-        })
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return NewMessageScreen();
+    }));
   }
 
 //
@@ -57,62 +61,46 @@ class _MessageTabState extends State<MessageTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: <Widget>[
-            _buildUtils(),
-            FlatButton(
-              child: Text("Sign out"),
-              onPressed: () {
-                this.signOut();
-              },
-            )
-//              Expanded(
-//                child: Center(
-//                  child: Container(
-//                    child: StreamBuilder<QuerySnapshot>(
-//                      stream: fbFriendsCollection.snapshots(),
-//                      builder: (context, snapshot) {
-//                        List<Widget> friends = [];
-//                        print("connection state: ${snapshot.connectionState} valu: ${snapshot.data}");
-//                        if (snapshot.connectionState != ConnectionState.active || !snapshot.hasData) {
-//                          return Text("Loading");
-//                        }
-//
-//                        // Create tile for each friend
-//                        snapshot.data.documents.forEach((friend) {
-//                          print(friend.data);
-//                          String name =
-//                              "${friend.data['firstName']} ${friend.data['lastName']}";
-//                          String docID = friend.documentID;
-//                          friends.add(FriendListTile(
-//                            friendName: name,
-//                            me: user,
-//                            tileInfo:
-//                            dbService.getFriendInfo(fbFriendsCollection, docID),
-//                          ));
-//                        });
-//
-//                        return ListView.separated(
-//                          padding: const EdgeInsets.all(8.0),
-//                          itemCount: friends.length,
-//                          itemBuilder: (BuildContext context, int index) {
-//                            return friends[index];
-//                          },
-//                          separatorBuilder: (BuildContext context, int index) =>
-//                          const Divider(),
-//                        );
-//                      },
-//                    ),
-//                  ),
-//                ),
-//              ),
-          ],
-        ),
-      ),
+    return BaseView<MainMessageTabViewModel>(
+      onModelReady: (model) {
+        model.getRoomListStream(Provider.of<Me>(context).uid);
+      },
+      builder: (context, model, _) {
+        return Scaffold(
+          appBar: _buildAppBar(),
+          body: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: <Widget>[
+                _buildUtils(),
+                FlatButton(
+                  child: Text("Sign out"),
+                  onPressed: () {
+                    this.signOut();
+                  },
+                ),
+                Expanded(
+                  child: StreamBuilder<List<ChatRoom>>(
+                    stream: model.roomListStream,
+                    builder: (context, AsyncSnapshot<List<ChatRoom>> snapshot) {
+                      print("room list stream: " + snapshot.data.toString());
+                      return ListItemBuilder(
+                          snapshot: snapshot,
+                          reverse: false,
+                          itemBuilder: (context, ChatRoom room) {
+                            return ReactiveFriendListTile(
+                              roomInfo: room,
+                              onPressed: () => _navigateToRoom(room.id),
+                            );
+                          });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -124,9 +112,7 @@ class _MessageTabState extends State<MessageTab> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                  child: TabTitleText(title: "Messages")
-              ),
+              Expanded(child: TabTitleText(title: "Messages")),
             ],
           ),
         ),
@@ -175,5 +161,13 @@ class _MessageTabState extends State<MessageTab> {
   void signOut() {
     Provider.of<AuthService>(context).signOutUser();
     Navigator.pop(context);
+  }
+
+  void _navigateToRoom(String roomId) {
+    Navigator.pushNamed(
+      context,
+      Router.chatScreen,
+      arguments: ChatScreenRouteArgs(chatRoomId: roomId),
+    );
   }
 }

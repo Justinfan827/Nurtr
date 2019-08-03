@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flash_chat/enums.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
+import 'package:flash_chat/services/time_service.dart';
 
 abstract class FireStoreModel {
   Map<String, dynamic> toMap();
-
 }
 
 /*
@@ -19,15 +19,14 @@ class Me extends User {
       String email,
       String uid,
       String goal,
-      String directChatId}) : super(
-    firstName: firstName,
-    lastName: lastName,
-    email: email,
-    uid: uid,
-    goal: goal,
-    directChatId: directChatId
-  );
-
+      String directChatId})
+      : super(
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            uid: uid,
+            goal: goal,
+            directChatId: directChatId);
 
   factory Me.fromUser(User user) {
     return Me(
@@ -38,43 +37,35 @@ class Me extends User {
         goal: user.goal,
         directChatId: user.directChatId);
   }
+
   static Me initial() {
-    return Me(
-        goal: "",
-        firstName: "",
-        email: "",
-        uid: "",
-        directChatId: ""
-    );
+    return Me(goal: "", firstName: "", email: "", uid: "", directChatId: "");
   }
 }
 
 // Convenience class to make adding to firestore easier.
 class UserKeys {
-  static  String firstName() => 'firstName';
-  static  String lastName() => 'lastName';
-  static  String email() => 'email';
-  static  String uid() => 'uid';
-  static  String goal() => 'goal';
-  static  String directChatId() => 'directChatId';
+  static String firstName() => 'firstName';
+
+  static String lastName() => 'lastName';
+
+  static String email() => 'email';
+
+  static String uid() => 'uid';
+
+  static String goal() => 'goal';
+
+  static String directChatId() => 'directChatId';
 }
 
 class User {
   @override
   String toString() {
-    // TODO: implement toString
     return "User: firstName: $firstName | lastName: $lastName | email: $email | uid: $uid | goal: $goal | directChatID: $directChatId";
   }
 
-
   static Me initial() {
-    return Me(
-        goal: "",
-        firstName: "",
-        email: "",
-        uid: "",
-        directChatId: ""
-    );
+    return Me(goal: "", firstName: "", email: "", uid: "", directChatId: "");
   }
 
   final String firstName;
@@ -120,16 +111,13 @@ class User {
     print(
         "Creating user from Firestore with data: ${data.data.toString()} ${data.documentID}");
     return User(
-      goal: data[UserKeys.goal()] ?? null,
-      firstName: data[UserKeys.firstName()] ?? 'noname',
-      lastName: data[UserKeys.lastName()] ?? 'noname',
-      email: data[UserKeys.email()] ?? 'noname',
-      uid: data.documentID ?? 'noname',
-      directChatId: data[UserKeys.directChatId()] ?? null
-    );
+        goal: data[UserKeys.goal()] ?? null,
+        firstName: data[UserKeys.firstName()] ?? 'noname',
+        lastName: data[UserKeys.lastName()] ?? 'noname',
+        email: data[UserKeys.email()] ?? 'noname',
+        uid: data.documentID ?? 'noname',
+        directChatId: data[UserKeys.directChatId()] ?? null);
   }
-
-
 }
 
 class Event {
@@ -185,38 +173,50 @@ class Event {
 
 class Goal {}
 
-
 class MessageKeys {
   static String get content => 'content';
+
   static String get contentType => 'contentType';
+
   static String get senderUid => 'senderUid';
+
   static String get senderName => 'senderName';
+  static String get sentTimeStamp => 'sentTimeStamp';
 }
 
+
 class Message {
+  @override
+  String toString() {
+    return "Message: senderName: $senderName, senderUid $senderUid, content: $content contentType: $contentType";
+  }
+
   dynamic content;
   String contentType;
   String senderUid;
   String senderName;
+  String sentTimeStamp;
 
-  Message({this.content, this.contentType, this.senderName, this.senderUid});
+  Message({this.content, this.contentType, this.senderName, this.senderUid, this.sentTimeStamp});
 
   factory Message.fromMap(Map data, String id) {
-    print("FROM MAP: ${data.toString()}");
+    Timestamp time = data[MessageKeys.sentTimeStamp];
+    String timeRepresentation = TimeService.getMessageTime(time.toDate());
     return Message(
-      content: data[MessageKeys.content] ?? "",
-      contentType: data[MessageKeys.contentType] ?? "",
-      senderUid: data[MessageKeys.senderUid] ?? "",
-      senderName: data[MessageKeys.senderName] ?? ""
+        content: data[MessageKeys.content] ?? "",
+        contentType: data[MessageKeys.contentType] ?? "",
+        senderUid: data[MessageKeys.senderUid] ?? "",
+        senderName: data[MessageKeys.senderName] ?? "",
+        sentTimeStamp: timeRepresentation,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      content: this.content ?? "",
-      contentType: this.contentType ?? "",
-      senderUid: this.senderUid ?? "",
-      senderName: this.senderName ?? ""
+      MessageKeys.content: this.content ?? "",
+      MessageKeys.contentType: this.contentType ?? "",
+      MessageKeys.senderUid: this.senderUid ?? "",
+      MessageKeys.senderName: this.senderName ?? "",
     };
   }
 }
@@ -229,33 +229,53 @@ class ImageMessage {}
 
 class EventMessage {}
 
-
 class ChatRoomKeys {
-  static  String roomName() => 'roomName';
-  static  String roomSize() => 'roomSize';
-  static  String id() => 'id';
+  static String roomName() => 'roomName';
+
+  static String roomSize() => 'roomSize';
+
+  static String lastMessage() => 'lastMessage';
+  static String id() => 'id';
 }
 
-class ChatRoom extends FireStoreModel{
+
+class ChatRoom extends FireStoreModel {
   String roomName;
-  String roomSize;
+  int roomSize;
+  dynamic participants; // contains info of users.
+  Message lastMessage;
   String id;
 
-  ChatRoom({this.roomName, this.roomSize, this.id});
+  @override
+  String toString() {
+    return "ChatRoom: roomName: $roomName, roomSize: $roomSize, participants: $participants, lastMessage: $lastMessage, id: $id";
+  }
+
+  ChatRoom(
+      {this.roomName,
+      this.roomSize,
+      this.id,
+      this.participants,
+      this.lastMessage});
 
   factory ChatRoom.fromMap(Map<String, dynamic> map, id) {
-    return ChatRoom(
+    print("from map: $id ${map[ChatRoomKeys.lastMessage()]}");
+    ChatRoom room = ChatRoom(
       id: id,
-      roomName: map[ChatRoomKeys.roomName()] ?? null,
+      roomName: map[ChatRoomKeys.roomName()],
       roomSize: map[ChatRoomKeys.roomSize()],
+      lastMessage: Message.fromMap(map[ChatRoomKeys.lastMessage()], null),
     );
+    print("Getting room: ${room.toString()}");
+    return room;
   }
 
   @override
   Map<String, dynamic> toMap() {
     // TODO: implement toMap
     return {
-      ChatRoomKeys.roomName() : this.roomName,
-      ChatRoomKeys.roomSize() : this.roomSize,
+      ChatRoomKeys.roomName(): this.roomName,
+      ChatRoomKeys.roomSize(): this.roomSize,
     };
-  }}
+  }
+}

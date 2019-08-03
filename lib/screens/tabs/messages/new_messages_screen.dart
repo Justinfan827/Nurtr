@@ -102,6 +102,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         return ListItemBuilder<User>(
           snapshot: snapshot,
+          reverse: false,
           itemBuilder: (BuildContext context, User user) => FriendListTile(
             friendInfo: user,
             onPressed: () {
@@ -163,6 +164,6 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       // TODO: just grab the chatId from the user.
       chatId = user.directChatId;
     }
-    Navigator.pushNamed(context, 'chatScreen', arguments: ChatScreenRouteArgs(chatRoomId: chatId));
+    Navigator.pushReplacementNamed(context, 'chatScreen', arguments: ChatScreenRouteArgs(chatRoomId: chatId));
   }
 }

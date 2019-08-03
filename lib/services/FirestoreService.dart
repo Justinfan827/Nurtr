@@ -17,7 +17,7 @@ class FirestoreService {
   FirestoreService._();
 
   static final FirestoreService service = FirestoreService._();
-
+  static final FieldValue serverTimestamp = FieldValue.serverTimestamp();
   // setting a document data. ID is specified in the path.
   Future<String> setDataInDocument(
       {@required String path, @required Map<String, dynamic> data, bool merge = false}) async {
@@ -54,7 +54,7 @@ class FirestoreService {
 
   Stream<List<T>> getCollectionStream<T>(
       {@required String path, @required T builder(Map<String, dynamic> data, String id)}) {
-    final reference = store.collection(path);
+    CollectionReference reference = store.collection(path);
     final snapshots = reference.snapshots();
     return snapshots.map(
       (snapshot) => snapshot.documents.map(
@@ -63,6 +63,15 @@ class FirestoreService {
     );
   }
 
+  Stream<List<T>> getCollectionStreamQuery<T>(
+      {@required T builder(Map<String, dynamic> data, String id), @required Query query}) {
+    final snapshots = query.snapshots();
+    return snapshots.map(
+          (snapshot) => snapshot.documents.map(
+            (doc) => builder(doc.data, doc.documentID),
+      ).toList(),
+    );
+  }
   Stream<T> getDocumentStream<T>(
       {@required String path, @required T builder(Map<String, dynamic> data, String id)}) {
     final reference = store.document(path);

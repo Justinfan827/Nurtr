@@ -9,9 +9,6 @@ import 'ApiPath.dart';
 import 'AuthService.dart';
 import 'FirestoreService.dart';
 
-final store = Firestore.instance;
-final auth = locator<AuthService>();
-
 // define application API here: this is the database that gets exposed once the user is logged in.
 // All authentication is done using the auth_service.
 abstract class Database {
@@ -195,13 +192,12 @@ class FirestoreDatabase extends Database {
   Future<String> createChatRoom(
       String creatorUid, List<User> participants) async {
     //  Create chat room with all users.
-    List usersPlainObject =
-        participants.map((user) => user.toMap()).toList(growable: false);
     String chatId = await FirestoreService.service.setDataInCollection(
       path: APIPath.rootRoomsCollection(),
       data: {
         'rommName': null,
-        'participants': usersPlainObject,
+        'participants': participants.map((user) => user.toMap()).toList(),
+        'participantUids': participants.map((user) => user.uid).toList(),
         'roomSize': participants.length,
       },
     );
@@ -261,8 +257,13 @@ class FirestoreDatabase extends Database {
 
   @override
   Stream<List<ChatRoom>> getChatRoomListStreamByUID(String uid) {
-    // TODO: implement getChatRoomListStreamByUID
-    return null;
+    print("looking for chatRooms with uid: $uid");
+    return FirestoreService.service.getCollectionStreamQuery(
+      query: store
+          .collection(APIPath.rootRoomsCollection())
+          .where("participantUids", arrayContains: uid),
+      builder: (Map data, String id) => ChatRoom.fromMap(data, id),
+    );
   }
 
   @override
@@ -327,9 +328,20 @@ class FirestoreDatabase extends Database {
 
   @override
   Future<void> sendMessage(String chatRoomId, Message message) async {
+
+    Map<String, dynamic> msg = {...message.toMap(), MessageKeys.sentTimeStamp: FirestoreService.serverTimestamp};
+
+    print("sending message: ${message.toString()}");
     await FirestoreService.service.setDataInCollection(
-        path: APIPath.roomMessageCollection(chatRoomId), data: message.toMap(),);
-    // TODO: confirmation of success?
+      path: APIPath.roomMessageCollection(chatRoomId),
+      data: msg,
+    );
+
+    // update the latest message sent on the chatRoom
+    await FirestoreService.service.setDataInDocument(
+        path: APIPath.chatRoomDocument(chatRoomId),
+        data: {ChatRoomKeys.lastMessage(): msg},
+        merge: true);
   }
 
   @override

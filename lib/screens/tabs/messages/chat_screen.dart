@@ -128,11 +128,9 @@ class _ChatScreenState extends State<ChatScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Expanded(
-                child: Container(
-                  child: ChatStream(
-                      msgStream: model.chatRoomMessageListStream,
-                      scrollController: _scrollController),
-                ),
+                child: ChatStream(
+                    msgStream: model.chatRoomMessageListStream,
+                    scrollController: _scrollController),
               ),
               _hiddenWidget,
               Container(
