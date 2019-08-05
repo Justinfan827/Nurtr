@@ -12,7 +12,8 @@ class ListItemBuilder<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (snapshot.hasData) {
+    if (snapshot.hasData && snapshot.connectionState == ConnectionState.active && snapshot.data != null) {
+
       List<T> items = snapshot.data;
       if (reverse != null && reverse) {
         items = items.reversed.toList();

@@ -7,7 +7,7 @@ class StreamItemBuilder<T> extends StatelessWidget {
   final Widget Function(T data) itemBuilder;
   final AsyncSnapshot snapshot;
 
-  StreamItemBuilder({Key key, this.snapshot, this.itemBuilder}) : super(key: key);
+  StreamItemBuilder({Key key, @required this.snapshot, @required this.itemBuilder}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

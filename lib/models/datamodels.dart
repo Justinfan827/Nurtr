@@ -84,7 +84,7 @@ class User {
       this.directChatId});
 
   factory User.fromMap(Map data, String id) {
-    print("Creating user with data: ${data.toString()}");
+//    print("User.fromMap: Creating user with data: ${data.toString()}");
     return User(
         firstName: data[UserKeys.firstName()],
         lastName: data[UserKeys.lastName()],
@@ -98,76 +98,71 @@ class User {
     var map = {
       '${UserKeys.firstName()}': firstName,
       '${UserKeys.lastName()}': lastName,
-      '${UserKeys.lastName()}': email,
-      '$uid': true, // This is necessary for making queries.
+      '${UserKeys.email()}': email,
+      '${UserKeys.uid()}': uid, // This is necessary for making queries.
       '${UserKeys.goal()}': goal,
       '${UserKeys.directChatId()}': directChatId,
     };
     return map;
   }
+}
 
-  // way to instantiate user given document snapshot
-  factory User.fromFirestore(DocumentSnapshot data) {
-    print(
-        "Creating user from Firestore with data: ${data.data.toString()} ${data.documentID}");
-    return User(
-        goal: data[UserKeys.goal()] ?? null,
-        firstName: data[UserKeys.firstName()] ?? 'noname',
-        lastName: data[UserKeys.lastName()] ?? 'noname',
-        email: data[UserKeys.email()] ?? 'noname',
-        uid: data.documentID ?? 'noname',
-        directChatId: data[UserKeys.directChatId()] ?? null);
-  }
+class EventKeys {
+  static String get name => 'name';
+
+  static String get description => 'description';
+
+  static String get participants => 'participants';
+
+  static String get participantUids => 'participantUids';
+
+  static String get eventDate => 'eventDate';
 }
 
 class Event {
-  final String eventName;
-  final String eventDescription;
-  final String location;
-  final Map<dynamic, dynamic> participantID;
+  final String id;
+  final String name;
+  final String description;
+
+//  final String location;
+  final List<String> participantUids;
   final List<User> participants;
 
-  // Storing epoch value in UTC
+  // Storing epoch value in ISO_UTC.
   final String eventDate;
 
   Event(
-      {this.eventName,
-      this.eventDescription,
-      this.location,
+      {this.name,
+      this.description,
       this.eventDate,
       this.participants,
-      this.participantID});
+      this.participantUids,
+      this.id});
 
-  factory Event.fromSnapshot(DocumentSnapshot data) {
-    List<User> users = [];
-    data.data['participants'].forEach((user) {
-      User.fromMap(user, user['UID']);
-    });
-    return Event(
-        eventName: data['eventName'],
-        eventDescription: data['eventDescription'],
-        location: data['location'],
-        eventDate: data['eventDate'],
-        participantID: data['participantID'],
-        participants: users);
-  }
-
-  factory Event.fromMap(Map data) {
+  factory Event.fromMap(Map data, String eventId) {
 //  for each of the users in the event list, get the user information.
+    List ls = data[EventKeys.participants].map((userMap) => User.fromMap(userMap, userMap['uid'])).toList();
+    print(ls.toString());
+    List<User> users = List<User>.from(ls);
+    List<String> uids = users.map((user) => user.uid).toList();
     return Event(
-        eventName: data['eventName'],
-        eventDescription: data['eventDescription'],
-        location: data['location'],
-        eventDate: data['eventDate'],
-        participants: data['participants'].keys.toList());
+        id: eventId,
+        name: data[EventKeys.name],
+        description: data[EventKeys.description],
+        eventDate: data[EventKeys.eventDate],
+        participants: users,
+        participantUids: uids,
+    );
   }
 
-  static List<Event> generateEvents(QuerySnapshot query) {
-    List<Event> events = [];
-    query.documents.forEach((doc) {
-      events.add(Event.fromSnapshot(doc));
-    });
-    return events;
+  Map<String, dynamic> toMap() {
+    return {
+      EventKeys.name: name,
+      EventKeys.description: description,
+      EventKeys.eventDate: eventDate,
+      EventKeys.participants: participants.map((user) => user.toMap()).toList(),
+      EventKeys.participantUids: participantUids
+    };
   }
 }
 
@@ -181,14 +176,14 @@ class MessageKeys {
   static String get senderUid => 'senderUid';
 
   static String get senderName => 'senderName';
+
   static String get sentTimeStamp => 'sentTimeStamp';
 }
-
 
 class Message {
   @override
   String toString() {
-    return "Message: senderName: $senderName, senderUid $senderUid, content: $content contentType: $contentType";
+    return "Message: senderName: $senderName, senderUid $senderUid, content: $content contentType: $contentType, sentTimeStamp $sentTimeStamp";
   }
 
   dynamic content;
@@ -197,17 +192,22 @@ class Message {
   String senderName;
   String sentTimeStamp;
 
-  Message({this.content, this.contentType, this.senderName, this.senderUid, this.sentTimeStamp});
+  Message(
+      {this.content,
+      this.contentType,
+      this.senderName,
+      this.senderUid,
+      this.sentTimeStamp});
 
   factory Message.fromMap(Map data, String id) {
-    Timestamp time = data[MessageKeys.sentTimeStamp];
+    Timestamp time = data[MessageKeys.sentTimeStamp] ?? Timestamp.now();
     String timeRepresentation = TimeService.getMessageTime(time.toDate());
     return Message(
-        content: data[MessageKeys.content] ?? "",
-        contentType: data[MessageKeys.contentType] ?? "",
-        senderUid: data[MessageKeys.senderUid] ?? "",
-        senderName: data[MessageKeys.senderName] ?? "",
-        sentTimeStamp: timeRepresentation,
+      content: data[MessageKeys.content] ?? "",
+      contentType: data[MessageKeys.contentType] ?? "",
+      senderUid: data[MessageKeys.senderUid] ?? "",
+      senderName: data[MessageKeys.senderName] ?? "",
+      sentTimeStamp: timeRepresentation,
     );
   }
 
@@ -227,22 +227,26 @@ class AudioMessage {}
 
 class ImageMessage {}
 
-class EventMessage {}
+class EventMessage extends Message {
+
+}
 
 class ChatRoomKeys {
   static String roomName() => 'roomName';
 
   static String roomSize() => 'roomSize';
 
+  static String participants() => 'participants';
+
   static String lastMessage() => 'lastMessage';
+
   static String id() => 'id';
 }
-
 
 class ChatRoom extends FireStoreModel {
   String roomName;
   int roomSize;
-  dynamic participants; // contains info of users.
+  List<User> participants; // contains info of users.
   Message lastMessage;
   String id;
 
@@ -259,14 +263,21 @@ class ChatRoom extends FireStoreModel {
       this.lastMessage});
 
   factory ChatRoom.fromMap(Map<String, dynamic> map, id) {
-    print("from map: $id ${map[ChatRoomKeys.lastMessage()]}");
+    // Generate users array.
+    List<dynamic> ls = map[ChatRoomKeys.participants()]
+        .map((userMap) => User.fromMap(userMap, userMap['uid']))
+        .toList();
+    List<User> users = List<User>.from(ls);
+    // generate messages array.
+    Message message = (map[ChatRoomKeys.lastMessage()] == null)
+        ? null
+        : Message.fromMap(map[ChatRoomKeys.lastMessage()], null);
     ChatRoom room = ChatRoom(
-      id: id,
-      roomName: map[ChatRoomKeys.roomName()],
-      roomSize: map[ChatRoomKeys.roomSize()],
-      lastMessage: Message.fromMap(map[ChatRoomKeys.lastMessage()], null),
-    );
-    print("Getting room: ${room.toString()}");
+        id: id,
+        roomName: map[ChatRoomKeys.roomName()] ?? "dummy",
+        roomSize: map[ChatRoomKeys.roomSize()] ?? -1,
+        lastMessage: message,
+        participants: users);
     return room;
   }
 

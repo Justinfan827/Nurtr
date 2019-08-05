@@ -8,8 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../constants.dart';
 
 class ProfileTabScreen extends StatefulWidget {
-  User user;
-  ProfileTabScreen({@required this.user});
+  ProfileTabScreen();
 
   @override
   _ProfileTabScreenState createState() => _ProfileTabScreenState();
@@ -20,16 +19,11 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
   TextEditingController controller = TextEditingController();
   String get goal => controller.text;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    print("HERE"  + widget.user.toString());
-  }
 
   @override
   Widget build(BuildContext context) {
     User me = Provider.of<Me>(context);
+    print("${me}");
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -94,7 +88,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: _buildGoalSection(me),
+            children: _buildGoalSection(),
           ),
         )),
       ),
@@ -105,18 +99,19 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
     setState(() {});
   }
 
-  void submitGoal(User me) async {
+  void submitGoal() async {
     FirestoreDatabase dbService = Provider.of<FirestoreDatabase>(context);
     try {
-      dbService.updateGoalForUser(me, goal);
+//      dbService.updateGoalForUser(Provider, goal);
       controller.clear();
     } catch (e) {
       print(e);
     }
   }
 
-  List<Widget> _buildGoalSection(User me) {
-    if (widget.user.goal == null) {
+  List<Widget> _buildGoalSection() {
+    Me me = Provider.of<Me>(context);
+    if (me.goal == null) {
       return [
         Text(
           '${me.firstName}, what are you trying to achieve?',
@@ -155,7 +150,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
           color: mainGreen,
           textColor: Colors.white,
           splashColor: mainGreen,
-          onPressed: () => submitGoal(me),
+          onPressed: () => submitGoal(),
         )
       ];
     } else {
@@ -169,7 +164,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
           height: 15,
         ),
         Text(
-          widget.user.goal,
+          Provider.of<Me>(context).goal,
           style: TextStyle(fontFamily: 'lato', fontSize: 20, color: mainGreen),
         ),
         SizedBox(

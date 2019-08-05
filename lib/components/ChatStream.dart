@@ -1,3 +1,4 @@
+import 'package:flash_chat/components/EventMessageBubble.dart';
 import 'package:flash_chat/components/ListItemBuilder.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,7 +35,6 @@ class _ChatStreamState extends State<ChatStream> {
       stream: widget.msgStream,
       initialData: [],
       builder: (context, AsyncSnapshot<List<Message>> snapshot) {
-        print("Stream length: ${snapshot.data.toString()}");
         return ListItemBuilder(
           snapshot: snapshot,
           reverse: true,
@@ -42,10 +42,7 @@ class _ChatStreamState extends State<ChatStream> {
             String senderName = msg.senderName;
             String senderUid = msg.senderUid;
             bool isMe = (me.uid == senderUid);
-            print("senderName: ${senderName}");
             return Container(
-              height: 100,
-              width: 100,
               child: Column(
               mainAxisSize: MainAxisSize.max,
               crossAxisAlignment:
@@ -61,10 +58,8 @@ class _ChatStreamState extends State<ChatStream> {
                   SizedBox(
                     height: 2,
                   ),
-                  MessageBubble(
-                    isMe: isMe,
-                    text: msg.content,
-                  ),
+                _renderMessage(isMe, msg),
+
                 ],
               ),
             );
@@ -129,6 +124,26 @@ class _ChatStreamState extends State<ChatStream> {
 //          ),
 //        );
 //      },
+  }
+
+  Widget _renderMessage(bool isMe, Message msg) {
+    switch (msg.contentType) {
+      case "EVENT": {
+        return EventMessageBubble(
+          isMe: isMe,
+          message: msg
+        );
+      }
+      break;
+      case "TEXT": {
+        return MessageBubble(
+          isMe: isMe,
+          text: msg.content,
+        );
+      }
+      break;
+    }
+
   }
 }
 

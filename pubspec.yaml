@@ -23,6 +23,7 @@ dependencies:
   flutter_datetime_picker: ^1.2.5
   get_it: ^1.0.3+2
   firebase_storage: ^3.0.4
+  image_picker: ^0.6.1
 
 
 

@@ -50,15 +50,6 @@ class _MessageTabState extends State<MessageTab> {
     }));
   }
 
-//
-//  void setupUser() async {
-//    // get a realtime stream of friends based on logged in user.
-//    // Set up providers to inject into component.
-//    providers = [
-//      Provider<CollectionReference>.value(value: fbFriendsCollection),
-//    ];
-//  }
-
   @override
   Widget build(BuildContext context) {
     return BaseView<MainMessageTabViewModel>(
@@ -83,7 +74,7 @@ class _MessageTabState extends State<MessageTab> {
                   child: StreamBuilder<List<ChatRoom>>(
                     stream: model.roomListStream,
                     builder: (context, AsyncSnapshot<List<ChatRoom>> snapshot) {
-                      print("room list stream: " + snapshot.data.toString());
+                      print("main_message_tab.build: snapshot data: " + snapshot.data.toString());
                       return ListItemBuilder(
                           snapshot: snapshot,
                           reverse: false,
@@ -130,10 +121,10 @@ class _MessageTabState extends State<MessageTab> {
           Expanded(
             child: Row(
               children: <Widget>[
-//                        Image(
-//                          image: AssetImage('images/searchIcon.png'),
-//                          height: 20,
-//                        ),
+                Image(
+                  image: AssetImage('images/searchIcon.png'),
+                  height: 20,
+                ),
                 Expanded(
                   child: TextField(
                     onChanged: (value) {

@@ -13,7 +13,7 @@ import 'FirestoreService.dart';
 // All authentication is done using the auth_service.
 abstract class Database {
   // Create / update / delete an event on firestore using one function.
-  Future<void> createEvent(String uid, Event eventPayload);
+  Future<void> createEvent(Event eventPayload);
 
   Future<void> updateEvent(String uid, Event eventPayload);
 
@@ -90,14 +90,14 @@ class FirestoreDatabase extends Database {
     return User.fromMap(snapshot.data, id);
   }
 
-  // Get a Stream of the user you want from firestore.
-  Stream<User> getUserAsStream(String id) {
-    return store
-        .collection('users')
-        .document(id)
-        .snapshots()
-        .map((docsnap) => User.fromFirestore(docsnap));
-  }
+//  // Get a Stream of the user you want from firestore.
+//  Stream<User> getUserAsStream(String id) {
+//    return store
+//        .collection('users')
+//        .document(id)
+//        .snapshots()
+//        .map((docsnap) => User.fromFirestore(docsnap));
+//  }
 
   // Get a Stream of authenticated user
   Stream<Me> getMyUserStream(String uid) {
@@ -106,51 +106,51 @@ class FirestoreDatabase extends Database {
         builder: (doc, id) => User.fromMap(doc, id));
   }
 
-  /**
-   * FRIEND METHODS
-   */
-  // Add a friend given their first name
-  Future<User> addFriend(User user, String friendName) async {
-    // My uid
-    var uid = user.uid;
-
-    // my friend
-    List<DocumentSnapshot> queryResults = (await store
-            .collection('users')
-            .where("firstName", isEqualTo: friendName)
-            .getDocuments())
-        .documents;
-
-    if (queryResults.length == 0) {
-      throw new StateError("USER NOT FOUND");
-    }
-
-    // my friend's uid:
-    String friendUID = queryResults[0].documentID;
-
-    if (friendUID == uid) {
-      throw new StateError("You can't add yourself silly");
-    }
-
-    User friendObj = User.fromFirestore(queryResults[0]);
-    // Add friend to collection
-    try {
-      await store
-          .collection('users')
-          .document(uid)
-          .collection('friends')
-          .document(friendUID)
-          .setData({
-        'firstName': friendObj.firstName,
-        'lastName': friendObj.lastName,
-        'email': friendObj.email,
-      });
-    } catch (e) {
-      throw new StateError("Error adding user to database");
-    }
-
-    return friendObj;
-  }
+//  /**
+//   * FRIEND METHODS
+//   */
+//  // Add a friend given their first name
+//  Future<User> addFriend(User user, String friendName) async {
+//    // My uid
+//    var uid = user.uid;
+//
+//    // my friend
+//    List<DocumentSnapshot> queryResults = (await store
+//            .collection('users')
+//            .where("firstName", isEqualTo: friendName)
+//            .getDocuments())
+//        .documents;
+//
+//    if (queryResults.length == 0) {
+//      throw new StateError("USER NOT FOUND");
+//    }
+//
+//    // my friend's uid:
+//    String friendUID = queryResults[0].documentID;
+//
+//    if (friendUID == uid) {
+//      throw new StateError("You can't add yourself silly");
+//    }
+//
+//    User friendObj = User.fromFirestorre(queryResults[0]);
+//    // Add friend to collection
+//    try {
+//      await store
+//          .collection('users')
+//          .document(uid)
+//          .collection('friends')
+//          .document(friendUID)
+//          .setData({
+//        'firstName': friendObj.firstName,
+//        'lastName': friendObj.lastName,
+//        'email': friendObj.email,
+//      });
+//    } catch (e) {
+//      throw new StateError("Error adding user to database");
+//    }
+//
+//    return friendObj;
+//  }
 
   // Get backend data for list-tile. I.e. get the friend's document.
   DocumentReference getFriendInfo(
@@ -159,27 +159,11 @@ class FirestoreDatabase extends Database {
   }
 
   @override
-  Future<void> createEvent(String uid, Event payload) async {
-//    String eventName, String eventDescription, String eventDate, List<String>  uidList, List<User> users
-//    var map = {
-//      'eventName': eventName,
-//      'eventDescription': eventDescription,
-//      'eventDate': eventDate,
-//      'participantID': Map.fromIterable(uidList, key: (uid) => uid, value: (uid) => true),
-//      'participants': users.map((user) => {
-//        'firstName': user.firstName,
-//        'lastName': user.lastName,
-//        'email': user.email,
-//        'uid': user.uid,
-//      }).toList(),
-//    };
-//
-//    print(map);
-//    try {
-//      await store.collection('events').document().setData(map);
-//    } catch(e) {
-//      throw new StateError("Error adding event to database.");
-//    }
+  Future<void> createEvent(Event payload) async {
+    await FirestoreService.service.setDataInCollection(
+      path: APIPath.rootEventsCollection(),
+      data: payload.toMap(),
+    );
   }
 
   Future<void> updateGoalForUser(User me, String goal) async {
@@ -274,8 +258,11 @@ class FirestoreDatabase extends Database {
 
   @override
   Stream<List<Event>> getEventListStreamByUID(String uid) {
-    // TODO: implement getEventListStreamByUID
-    return null;
+    return FirestoreService.service.getCollectionStreamQuery(
+        builder: (Map data, String id) => Event.fromMap(data, id),
+        query: store
+            .collection(APIPath.rootEventsCollection())
+            .where(EventKeys.participantUids, arrayContains: uid));
   }
 
   // Method to get my list of friends.
@@ -328,10 +315,12 @@ class FirestoreDatabase extends Database {
 
   @override
   Future<void> sendMessage(String chatRoomId, Message message) async {
-
-    Map<String, dynamic> msg = {...message.toMap(), MessageKeys.sentTimeStamp: FirestoreService.serverTimestamp};
-
-    print("sending message: ${message.toString()}");
+    Map<String, dynamic> msg = {
+      ...message.toMap(),
+      MessageKeys.sentTimeStamp: FirestoreService.serverTimestamp
+    };
+    print("FirebaseDartabse.sendMessage: sending message: ${msg.toString()}");
+//    return;
     await FirestoreService.service.setDataInCollection(
       path: APIPath.roomMessageCollection(chatRoomId),
       data: msg,

@@ -1,3 +1,4 @@
+// Service to handle displaying all times in the app.
 class TimeService {
   static String displayHour(int hour, int _min) {
     var minute = _min.toString();
@@ -18,5 +19,10 @@ class TimeService {
     int minute = date.minute;
     String display = displayHour(hour, minute);
     return display;
+  }
+
+  static String getDisplayTime(String isoUtcString) {
+    DateTime date = DateTime.parse(isoUtcString);
+    return getMessageTime(date);
   }
 }

@@ -16,31 +16,14 @@ class EventCard extends StatefulWidget {
 }
 
 class _EventCardState extends State<EventCard> {
-
-  bool isLoading = true;
-  
-  @override
-  void initState() {
-    super.initState();
-  }
-  
-  void buildUsers() async {
-    List<User> users;
-    setState(() {
-      isLoading = false;
-    });
-  }
-  
   @override
   Widget build(BuildContext context) {
-    String date = widget.event.eventDate != null ? TimeService.displayHour(
-        DateTime.parse(widget.event.eventDate).hour, DateTime.parse(widget.event.eventDate).minute): "";
     return ListTile(
       leading: Icon(FontAwesomeIcons.smile),
-      title: Text(widget.event.eventName),
-      subtitle: Text(widget.event.eventDescription),
+      title: Text(widget.event.name),
+      subtitle: Text(widget.event.description),
       isThreeLine: true,
-      trailing: Text(date),
+      trailing: Text(TimeService.getDisplayTime(widget.event.eventDate)),
     );
   }
 }

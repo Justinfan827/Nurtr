@@ -1,4 +1,5 @@
 import 'package:flash_chat/viewmodels/ChatScreenViewModel.dart';
+import 'package:flash_chat/viewmodels/EventTabViewModel.dart';
 import 'package:flash_chat/viewmodels/MainMessageTabViewModel.dart';
 import 'package:flash_chat/viewmodels/NewMessageScreenViewModel.dart';
 import 'package:flash_chat/viewmodels/ReactiveTileModel.dart';
@@ -17,6 +18,8 @@ void setupLocator() {
   locator.registerFactory(() => ChatScreenViewModel());
   locator.registerFactory(() => MainMessageTabViewModel());
   locator.registerFactory(() => ReactiveTileModel());
+  locator.registerFactory(() => EventTabViewModel());
+
 
 
 }

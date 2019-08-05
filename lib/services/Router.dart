@@ -15,7 +15,7 @@ class Router {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case rootScreen:
-        return MaterialPageRoute(builder: (_) =>  WelcomeScreen());
+        return MaterialPageRoute(fullscreenDialog: true,builder: (_) =>  WelcomeScreen());
       case chatScreen:
         var args = settings.arguments as ChatScreenRouteArgs;
         return MaterialPageRoute(builder: (_) =>  ChatScreen(chatRoomId: args.chatRoomId));

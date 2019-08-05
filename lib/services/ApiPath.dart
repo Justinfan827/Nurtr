@@ -9,8 +9,8 @@ class APIPath {
 
   // messages
 
-  static String rootEventsCollection(String myUid) => _events;
-  static String rootUsersCollection(String myUid) => _users;
+  static String rootEventsCollection() => _events;
+  static String rootUsersCollection() => _users;
   static String rootRoomsCollection() => _rooms;
   
   static String myFriendsCollection(String myUid) => '$_users/$myUid/friends';
