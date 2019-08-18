@@ -211,7 +211,7 @@ class FirestoreDatabase extends Database {
 
   @override
   Future<void> createUser(String uid, User payload) {
-    // TODO: implement createUser
+    // TODO: implement createUser (call the auth service?
     return null;
   }
 

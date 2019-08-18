@@ -24,6 +24,7 @@ class FlashChat extends StatelessWidget {
       initialData: Me.initial(),
       child: MaterialApp(
         theme: ThemeData.light().copyWith(
+          backgroundColor: Colors.white,
           appBarTheme: AppBarTheme(
             color: Colors.black
           )

@@ -1,5 +1,7 @@
+import 'package:flash_chat/viewmodels/AccountInfoViewModel.dart';
 import 'package:flash_chat/viewmodels/ChatScreenViewModel.dart';
 import 'package:flash_chat/viewmodels/EventTabViewModel.dart';
+import 'package:flash_chat/viewmodels/GoalTabViewModel.dart';
 import 'package:flash_chat/viewmodels/MainMessageTabViewModel.dart';
 import 'package:flash_chat/viewmodels/NewMessageScreenViewModel.dart';
 import 'package:flash_chat/viewmodels/ReactiveTileModel.dart';
@@ -19,7 +21,8 @@ void setupLocator() {
   locator.registerFactory(() => MainMessageTabViewModel());
   locator.registerFactory(() => ReactiveTileModel());
   locator.registerFactory(() => EventTabViewModel());
-
+  locator.registerFactory(() => ProfileTabViewModel());
+  locator.registerFactory(() => AccountInfoViewModel());
 
 
 }

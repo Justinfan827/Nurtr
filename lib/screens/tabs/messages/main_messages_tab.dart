@@ -64,12 +64,6 @@ class _MessageTabState extends State<MessageTab> {
             child: Column(
               children: <Widget>[
                 _buildUtils(),
-                FlatButton(
-                  child: Text("Sign out"),
-                  onPressed: () {
-                    this.signOut();
-                  },
-                ),
                 Expanded(
                   child: StreamBuilder<List<ChatRoom>>(
                     stream: model.roomListStream,
@@ -149,10 +143,6 @@ class _MessageTabState extends State<MessageTab> {
     );
   }
 
-  void signOut() {
-    Provider.of<AuthService>(context).signOutUser();
-    Navigator.pop(context);
-  }
 
   void _navigateToRoom(String roomId) {
     Navigator.pushNamed(

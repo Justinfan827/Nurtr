@@ -60,25 +60,6 @@ class _TabRootScreenState extends State<TabRootScreen> {
     setState(() {
       this._selectedIndex = tabIndex;
     });
-
-    // Navigating to tabbed events. Provide stream of events.
-    if (_selectedIndex == 1) {
-//      try {
-//        Stream<List<Event>> eventsStream = store
-//            .collection('events')
-//            .where('participantID.${Provid}', isEqualTo: true)
-//            .snapshots()
-//            .map((query) => Event.generateEvents(query));
-//        _providers.add(
-//          StreamProvider<List<Event>>.value(
-//            value: eventsStream,
-//            initialData: [],
-//          ),
-//        );
-//      } catch (e) {
-//        print(e);
-//      }
-    }
   }
 
   @override
