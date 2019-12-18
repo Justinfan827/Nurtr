@@ -34,15 +34,15 @@ class _SignInFormBlocState extends State<SignInFormBloc> {
   final TextEditingController _pwordController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
 
-  Future<void> navigateToTabScreen(User me) async {
+  Future<void> navigateToTabScreen() async {
     Navigator.pushNamed(context, Router.newMessageScreen);
   }
 
   Future<void> submitForm() async {
     print("Submitting form");
-    Me me = await widget.bloc.submitForm();
+    await widget.bloc.submitForm();
     print("navigating to screen");
-    await navigateToTabScreen(me);
+    await navigateToTabScreen();
   }
 
   void clearAllTextFields() {

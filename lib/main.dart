@@ -1,5 +1,6 @@
 import 'package:flash_chat/services/AuthService.dart';
 import 'package:flash_chat/services/Router.dart';
+import 'package:flash_chat/services/UserService.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/screens/intro/welcome_screen.dart';
 import 'package:flash_chat/screens/intro/login_screen.dart';
@@ -20,7 +21,7 @@ class FlashChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamProvider<Me>(
-      builder: (context) => locator<AuthService>().loggedInUserStream.stream,
+      builder: (context) => locator<UserService>().loggedInUserStream.stream,
       initialData: Me.initial(),
       child: MaterialApp(
         theme: ThemeData.light().copyWith(

@@ -17,14 +17,14 @@ class SignInBloc {
   }
 
 
-  Future<Me> submitForm() async {
+  Future<void> submitForm() async {
     print("bloc submitting form");
     updateWith(submittedForm: true);
     try {
       if (_model.formType == FormType.Login) {
-        return loginHandler();
+        await loginHandler();
       } else {
-        return  registrationHandler();
+        await registrationHandler();
       }
     } catch (e) {
       print(e);
@@ -41,11 +41,10 @@ class SignInBloc {
     }
   }
 
-  Future<Me>loginHandler() async {
+  Future<void>loginHandler() async {
     try {
       updateWith(loading: true);
-      Me user = await authService.signInUser(_model.email, _model.password);
-      return user;
+      await authService.signInUser(_model.email, _model.password);
     } catch (e) {
       print(e);
       rethrow;
@@ -54,7 +53,7 @@ class SignInBloc {
     }
   }
 
-  Future<Me> registrationHandler() async {
+  Future<void> registrationHandler() async {
     // TODO: error catching on signin.
     try {
       updateWith(loading: true);

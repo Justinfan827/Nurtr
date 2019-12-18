@@ -86,8 +86,10 @@ class FirestoreDatabase extends Database {
 
   //Get a single user from firestore without the stream.
   Future<User> getUser(String id) async {
-    var snapshot = await store.collection('users').document(id).get();
-    return User.fromMap(snapshot.data, id);
+    return FirestoreService.service.getData(
+      path: APIPath.myInfoDocument(id),
+      builder: (data) => User.fromMap(data, id),
+    );
   }
 
 //  // Get a Stream of the user you want from firestore.
@@ -352,8 +354,17 @@ class FirestoreDatabase extends Database {
   }
 
   @override
-  Future<void> updateUser(String uid, User payload) {
-    // TODO: implement updateUser
-    return null;
+  Future<void> updateUser(String uid, User payload) async {
+    var data = payload.toMap();
+    Map<String, dynamic> strippedData = {};
+    // remove null values from map.
+    payload.toMap().keys.forEach((key) => {
+      if (data[key] != null) {
+        strippedData[key] = data[key]
+      }
+    });
+    print(strippedData.toString());
+    await FirestoreService.service
+        .setDataInDocument(path: APIPath.myInfoDocument(uid), data: strippedData, merge: true);
   }
 }

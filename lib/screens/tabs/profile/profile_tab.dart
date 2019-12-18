@@ -18,27 +18,24 @@ class ProfileTabScreen extends StatefulWidget {
 }
 
 class _ProfileTabScreenState extends State<ProfileTabScreen> {
-
   TextEditingController controller = TextEditingController();
-  String get goal => controller.text;
 
+  String get goal => controller.text;
 
   @override
   Widget build(BuildContext context) {
     User me = Provider.of<Me>(context);
     print("${me}");
     return BaseView<ProfileTabViewModel>(
-      onModelReady: (model) {
-
-      },
-
-      builder:(context, model, _) => DefaultTabController(
+      onModelReady: (model) {},
+      builder: (context, model, _) => DefaultTabController(
         length: 2,
         child: Scaffold(
           appBar: _buildAppBar(model),
           body: Container(
               child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 18.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 10.0, horizontal: 18.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -71,72 +68,71 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
     Me me = Provider.of<Me>(context);
     if (me.goal == null) {
       return Column(
-          children: [
-            Text(
-              '${me.firstName}, what are you trying to achieve?',
-              style: TextStyle(
-                  fontFamily: 'lato', fontSize: 30, color: Colors.blueGrey),
+        children: [
+          Text(
+            '${me.firstName}, what are you trying to achieve?',
+            style: TextStyle(
+                fontFamily: 'lato', fontSize: 30, color: Colors.blueGrey),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Text(
+            'Setting a goal will bring you focus and intention to your everyday actions',
+            style:
+                TextStyle(fontFamily: 'lato', fontSize: 15, color: mainGreen),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          TextField(
+            controller: controller,
+            decoration: kFloatingTextFieldDecoration.copyWith(
+                hintText: "e.g. Meditate in the morning"),
+            onChanged: (_) => updateState,
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          RaisedButton(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
-            SizedBox(
-              height: 15,
+            child: Text(
+              'Commit',
+              style: TextStyle(fontFamily: 'lato'),
             ),
-            Text(
-              'Setting a goal will bring you focus and intention to your everyday actions',
-              style: TextStyle(fontFamily: 'lato', fontSize: 15, color: mainGreen),
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            TextField(
-              controller: controller,
-              decoration: kFloatingTextFieldDecoration.copyWith(
-                  hintText: "e.g. Meditate in the morning"),
-              onChanged: (_) => updateState,
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            RaisedButton(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Commit',
-                style: TextStyle(
-                  fontFamily: 'lato'
-                ),
-              ),
-              color: mainGreen,
-              textColor: Colors.white,
-              splashColor: mainGreen,
-              onPressed: () => submitGoal(),
-            )
-          ],
-        );
+            color: mainGreen,
+            textColor: Colors.white,
+            splashColor: mainGreen,
+            onPressed: () => submitGoal(),
+          )
+        ],
+      );
     } else {
-      return
-        Column(
-          children: [
-            Text(
-              'Your goal:',
-              style: TextStyle(
-                  fontFamily: 'lato', fontSize: 20, color: Colors.blueGrey),
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Text(
-              Provider.of<Me>(context).goal,
-              style: TextStyle(fontFamily: 'lato', fontSize: 20, color: mainGreen),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            SizedBox(
-              height: 15,
-            )
-          ],
-        );
+      return Column(
+        children: [
+          Text(
+            'Your goal:',
+            style: TextStyle(
+                fontFamily: 'lato', fontSize: 20, color: Colors.blueGrey),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Text(
+            Provider.of<Me>(context).goal,
+            style:
+                TextStyle(fontFamily: 'lato', fontSize: 20, color: mainGreen),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          SizedBox(
+            height: 15,
+          )
+        ],
+      );
     }
   }
 
@@ -153,18 +149,14 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
   Future<void> handleLogout(ProfileTabViewModel model) async {
     try {
       await model.logout();
-    } catch (e) {
-
-    } finally {
-
-    }
+    } catch (e) {} finally {}
     Navigator.pop(context);
   }
 
   Widget _buildAppBar(ProfileTabViewModel model) {
     Me me = Provider.of<Me>(context);
     return PreferredSize(
-      preferredSize: Size.fromHeight(150),
+      preferredSize: Size.fromHeight(200),
       child: Container(
         color: mainGreen,
         child: Padding(
@@ -183,8 +175,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                         style: TextStyle(
                             fontFamily: 'lato',
                             color: Colors.white,
-                            fontWeight: FontWeight.w700
-                        ),
+                            fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
@@ -194,10 +185,33 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Icon(
-                    FontAwesomeIcons.smile,
-                    size: 50,
-                    color: Colors.white,
+                  Stack(
+                    children: <Widget>[
+                      Container(
+                        child: (me.profilePic == null)
+                            ? Container(
+                                width: 100.0,
+                                height: 100.0,
+                                child: Icon(FontAwesomeIcons.mandalorian))
+                            : Container(
+                                width: 100.0,
+                                height: 100.0,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                        fit: BoxFit.fill,
+                                        image: MemoryImage(me.profilePic))),
+                              ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Icon(
+                          FontAwesomeIcons.userEdit,
+                          color: Colors.white,
+                        ),
+                      )
+                    ],
                   ),
                   SizedBox(
                     height: 10,
@@ -226,9 +240,10 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
           onTap: _navigateToSettings,
           child: ListTile(
             trailing: Icon(FontAwesomeIcons.chevronRight),
-            title: Text("Personal Information", style: TextStyle(
-              color: Colors.grey[700]
-            ), ),
+            title: Text(
+              "Personal Information",
+              style: TextStyle(color: Colors.grey[700]),
+            ),
           ),
         )
       ],

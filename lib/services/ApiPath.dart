@@ -23,3 +23,7 @@ class APIPath {
   static String roomMessageCollection(String roomId) => '$_rooms/$roomId/messages';
 
 }
+
+class StoragePath {
+  static String users(String uid) =>'/users/$uid';
+}

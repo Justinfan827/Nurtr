@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flash_chat/enums.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
@@ -19,6 +22,8 @@ class Me extends User {
       String email,
       String uid,
       String goal,
+      Uint8List profilePic,
+      String profilePicPath,
       String directChatId})
       : super(
             firstName: firstName,
@@ -26,16 +31,21 @@ class Me extends User {
             email: email,
             uid: uid,
             goal: goal,
-            directChatId: directChatId);
+            directChatId: directChatId,
+            profilePicPath: profilePicPath,
+            profilePic: profilePic);
 
   factory Me.fromUser(User user) {
+//    print("Me.fromUser: Creating user with data: ${user.toMap().toString()}");
     return Me(
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         uid: user.uid,
         goal: user.goal,
-        directChatId: user.directChatId);
+        directChatId: user.directChatId,
+        profilePic: user.profilePic,
+        profilePicPath: user.profilePicPath);
   }
 
   static Me initial() {
@@ -45,6 +55,8 @@ class Me extends User {
 
 // Convenience class to make adding to firestore easier.
 class UserKeys {
+  static String profilePicPath() => 'profilePicPath';
+
   static String firstName() => 'firstName';
 
   static String lastName() => 'lastName';
@@ -61,11 +73,11 @@ class UserKeys {
 class User {
   @override
   String toString() {
-    return "User: firstName: $firstName | lastName: $lastName | email: $email | uid: $uid | goal: $goal | directChatID: $directChatId";
+    return "User: firstName: $firstName | lastName: $lastName | email: $email | uid: $uid | goal: $goal | directChatID: $directChatId profilePicPath | $profilePicPath";
   }
 
-  static Me initial() {
-    return Me(goal: "", firstName: "", email: "", uid: "", directChatId: "");
+  static User initial() {
+    return User(goal: "", firstName: "", email: "", uid: "", directChatId: "");
   }
 
   final String firstName;
@@ -75,8 +87,15 @@ class User {
   final String goal;
   final String directChatId;
 
+  final String profilePicPath;
+
+  // Non-db fields
+  Uint8List profilePic;
+
   User(
       {this.firstName,
+      this.profilePic,
+      this.profilePicPath,
       this.lastName,
       this.email,
       this.uid,
@@ -86,12 +105,14 @@ class User {
   factory User.fromMap(Map data, String id) {
 //    print("User.fromMap: Creating user with data: ${data.toString()}");
     return User(
+        profilePicPath: data[UserKeys.profilePicPath()],
         firstName: data[UserKeys.firstName()],
         lastName: data[UserKeys.lastName()],
         email: data[UserKeys.email()],
         uid: id,
         goal: data[UserKeys.goal()],
         directChatId: data[UserKeys.directChatId()]);
+//    TODO: how to get profile pic?
   }
 
   Map<String, dynamic> toMap() {
@@ -102,7 +123,10 @@ class User {
       '${UserKeys.uid()}': uid, // This is necessary for making queries.
       '${UserKeys.goal()}': goal,
       '${UserKeys.directChatId()}': directChatId,
+      '${UserKeys.profilePicPath()}': profilePicPath,
     };
+//    print("User.fromMap: setting to map user with data: ${map.toString()}");
+
     return map;
   }
 }
@@ -141,17 +165,19 @@ class Event {
 
   factory Event.fromMap(Map data, String eventId) {
 //  for each of the users in the event list, get the user information.
-    List ls = data[EventKeys.participants].map((userMap) => User.fromMap(userMap, userMap['uid'])).toList();
+    List ls = data[EventKeys.participants]
+        .map((userMap) => User.fromMap(userMap, userMap['uid']))
+        .toList();
     print(ls.toString());
     List<User> users = List<User>.from(ls);
     List<String> uids = users.map((user) => user.uid).toList();
     return Event(
-        id: eventId,
-        name: data[EventKeys.name],
-        description: data[EventKeys.description],
-        eventDate: data[EventKeys.eventDate],
-        participants: users,
-        participantUids: uids,
+      id: eventId,
+      name: data[EventKeys.name],
+      description: data[EventKeys.description],
+      eventDate: data[EventKeys.eventDate],
+      participants: users,
+      participantUids: uids,
     );
   }
 
@@ -227,9 +253,7 @@ class AudioMessage {}
 
 class ImageMessage {}
 
-class EventMessage extends Message {
-
-}
+class EventMessage extends Message {}
 
 class ChatRoomKeys {
   static String roomName() => 'roomName';

@@ -1,3 +1,5 @@
+import 'package:flash_chat/services/FirebaseStorage.dart';
+import 'package:flash_chat/services/UserService.dart';
 import 'package:flash_chat/viewmodels/AccountInfoViewModel.dart';
 import 'package:flash_chat/viewmodels/ChatScreenViewModel.dart';
 import 'package:flash_chat/viewmodels/EventTabViewModel.dart';
@@ -16,6 +18,8 @@ void setupLocator() {
   locator.registerLazySingleton(() => SignInBloc());
   locator.registerLazySingleton(() => AuthService());
   locator.registerLazySingleton(() => FirestoreDatabase());
+  locator.registerLazySingleton(() => UserService());
+  locator.registerLazySingleton(() => CloudStorage());
   locator.registerFactory(() => NewMessageScreenViewModel());
   locator.registerFactory(() => ChatScreenViewModel());
   locator.registerFactory(() => MainMessageTabViewModel());
@@ -24,5 +28,4 @@ void setupLocator() {
   locator.registerFactory(() => ProfileTabViewModel());
   locator.registerFactory(() => AccountInfoViewModel());
 
-
-}
+}/**/

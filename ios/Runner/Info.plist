@@ -39,7 +39,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow users to select a photo for their profile picture</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow users to record messages and send them</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow users to take a photo as thier profile picture</string>
 </dict>
 </plist>

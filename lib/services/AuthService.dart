@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flash_chat/enums.dart';
 import 'package:flash_chat/models/datamodels.dart';
 import 'package:flash_chat/services/FirebaseDatabase.dart';
 import 'package:flash_chat/services/ApiPath.dart';
+import 'package:flash_chat/services/UserService.dart';
 import 'package:flash_chat/viewmodels/locator.dart';
 import 'FirestoreService.dart';
 
@@ -10,40 +12,28 @@ import 'FirestoreService.dart';
 // All information about signing in and the currently active user should be abstracted away here.
 
 final auth = FirebaseAuth.instance;
-
 class AuthService {
 
-  StreamController<Me> loggedInUserStream = StreamController<Me>();
+  UserService userService = locator<UserService>();
+  FirestoreDatabase store = locator<FirestoreDatabase>();
 
   /// Sign in firebase user.
-  Future<Me> signInUser(String email, String pword) async {
+  Future<void> signInUser(String email, String pword) async {
     await auth.signInWithEmailAndPassword(
       email: email,
       password: pword,
     );
 
-    Me me = await getCurrentAuthenticatedUser();
-    // IMPORTANT. This allows calls to firebase in the firestore service to work.
-    locator<FirestoreDatabase>().initializeWithUid(me.uid);
-    return me;
-  }
-
-  /// Sign out firebase user.
-  Future<void> signOutUser() async {
-    await auth.signOut();
+    await getCurrentAuthenticatedUser();
+    print("AuthService SignInUser completed");
   }
 
   /// Get currently authenticated user.
-  Future<Me> getCurrentAuthenticatedUser() async {
+  Future<void> getCurrentAuthenticatedUser() async {
     FirebaseUser user = await auth.currentUser();
-    User u = await FirestoreService.service.getData(
-      path: APIPath.myInfoDocument(user.uid),
-      builder: (data) => User.fromMap(data, user.uid),
-    );
-
-    Me me = Me.fromUser(u);
-    loggedInUserStream.add(me);
-    return me;
+    // IMPORTANT. This allows calls to firebase in the firestore service to work.
+    store.initializeWithUid(user.uid);
+    await userService.pushUser(user.uid, UserStreamType.SignIn);
   }
 
   /// Stream to listen to changes in user.
@@ -55,6 +45,11 @@ class AuthService {
         uid: user.uid));
 
 
+  }
+
+  /// Sign out firebase user.
+  Future<void> signOutUser() async {
+    await auth.signOut();
   }
 
   Future<User> createUser(
@@ -73,7 +68,7 @@ class AuthService {
     await FirestoreService.service
         .setDataInCollection(path: APIPath.myInfoPrivateCollection(user.uid), data: privateMap);
     Me me = Me.fromUser(User.fromMap({...map, ...privateMap}, user.uid));
-    loggedInUserStream.add(me);
+    userService.pushUser(me.uid, UserStreamType.Created);
     return me;
   }
 
